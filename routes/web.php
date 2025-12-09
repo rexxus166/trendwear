@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\CategoryController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -16,36 +18,40 @@ Route::get('/dashboard', function () {
 // --- RUTE UNTUK ADMIN ---
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 
+    // Dashboard
     Route::get('/dashboard', function () {
         return view('page.admin.dashboard.index');
     })->name('admin.dashboard');
 
-    // Route Produk
-    Route::get('/products', function () {
-        return view('page.admin.produk.index');
-    })->name('admin.products');
+    // --- MODULE PRODUCTS ---
+    Route::get('/products', [ProductController::class, 'index'])->name('admin.products');
+    Route::post('/products', [ProductController::class, 'store'])->name('admin.products.store');
+    Route::put('/products/{product}', [ProductController::class, 'update'])->name('admin.products.update');
 
-    // Route Pesanan
+    //Route untuk hapus gambar spesifik
+    Route::delete('/product-images/{id}', [ProductController::class, 'destroyImage'])->name('admin.products.delete-image');
+
+    Route::post('/categories', [CategoryController::class, 'store'])->name('admin.categories.store');
+
+    // --- MODULE ORDERS ---
     Route::get('/orders', function () {
         return view('page.admin.pesanan.index');
     })->name('admin.orders');
 
-    // Route Pelanggan
+    // --- MODULE CUSTOMERS ---
     Route::get('/customers', function () {
         return view('page.admin.pelanggan.index');
     })->name('admin.customers');
 
-    // Route Analisis
+    // --- MODULE ANALYTICS ---
     Route::get('/analytics', function () {
         return view('page.admin.analisis.index');
     })->name('admin.analytics');
 
-    // Route Pengaturan
-    Route::get('/pengaturan', function () {
+    // --- MODULE SETTINGS ---
+    Route::get('/settings', function () {
         return view('page.admin.pengaturan.index');
     })->name('admin.pengaturan');
-
-    // Tambahkan route admin lainnya di sini...
 });
 
 
