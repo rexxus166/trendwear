@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\CategoryController;
@@ -10,9 +12,14 @@ Route::get('/', function () {
 });
 
 // --- RUTE UNTUK USER BIASA (MEMBER) ---
-Route::get('/dashboard', function () {
-    return view('page.dashboard.index');
-})->middleware(['auth', 'verified', 'role:user'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified', 'role:user'])->name('dashboard');
+// Halaman Detail Produk (BARU)
+Route::get('/product/{slug}', [DashboardController::class, 'show'])->name('product.detail');
+
+// --- RUTE UNTUK CART ---
+Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
+Route::delete('/cart/{id}', [CartController::class, 'destroy'])->name('cart.destroy');
 
 
 // --- RUTE UNTUK ADMIN ---
