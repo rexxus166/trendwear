@@ -32,7 +32,7 @@
 
                 @php
                     // Menghitung jumlah item di keranjang user saat ini
-                    $cartCount = \App\Models\Cart::where('user_id', Auth::id())->count();
+                    $cartCount = \App\Models\Cart::where('user_id', Auth::id())->sum('quantity');
                 @endphp
                 
                 <a href="{{ route('cart.index') }}" class="relative cursor-pointer hover:scale-105 transition-transform group">

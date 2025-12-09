@@ -59,9 +59,28 @@
                                 </div>
 
                                 <div class="flex justify-between items-center mt-3 sm:mt-0">
-                                    <div class="flex items-center border border-gray-200 rounded-lg px-3 py-1 bg-gray-50">
-                                        <span class="text-xs text-gray-500 mr-2">Qty:</span>
-                                        <span class="font-bold text-sm">{{ $cart->quantity }}</span>
+                                    <div class="flex items-center border border-gray-300 rounded-lg h-9">
+                                        <form action="{{ route('cart.update', $cart->id) }}" method="POST">
+                                            @csrf
+                                            @method('PATCH')
+                                            <input type="hidden" name="type" value="decrement">
+                                            <button type="submit" class="w-8 h-full flex items-center justify-center text-gray-500 hover:bg-gray-100 rounded-l-lg transition-colors {{ $cart->quantity <= 1 ? 'opacity-50 cursor-not-allowed' : '' }}" {{ $cart->quantity <= 1 ? 'disabled' : '' }}>
+                                                -
+                                            </button>
+                                        </form>
+
+                                        <div class="w-10 h-full flex items-center justify-center text-sm font-bold border-x border-gray-300 bg-white">
+                                            {{ $cart->quantity }}
+                                        </div>
+
+                                        <form action="{{ route('cart.update', $cart->id) }}" method="POST">
+                                            @csrf
+                                            @method('PATCH')
+                                            <input type="hidden" name="type" value="increment">
+                                            <button type="submit" class="w-8 h-full flex items-center justify-center text-gray-500 hover:bg-gray-100 rounded-r-lg transition-colors {{ $cart->quantity >= $cart->product->stock ? 'opacity-50 cursor-not-allowed' : '' }}" {{ $cart->quantity >= $cart->product->stock ? 'disabled' : '' }}>
+                                                +
+                                            </button>
+                                        </form>
                                     </div>
                                     <p class="text-lg font-bold text-black">Rp {{ number_format($cart->product->price, 0, ',', '.') }}</p>
                                 </div>

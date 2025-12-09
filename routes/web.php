@@ -19,6 +19,7 @@ Route::get('/product/{slug}', [DashboardController::class, 'show'])->name('produ
 // --- RUTE UNTUK CART ---
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
+Route::patch('/cart/{id}', [CartController::class, 'update'])->name('cart.update');
 Route::delete('/cart/{id}', [CartController::class, 'destroy'])->name('cart.destroy');
 
 

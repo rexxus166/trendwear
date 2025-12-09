@@ -20,6 +20,29 @@ class CartController extends Controller
         return view('page.keranjang.index', compact('carts'));
     }
 
+    // Tambahkan method ini
+    public function update(Request $request, $id)
+    {
+        $cart = Cart::where('user_id', Auth::id())->where('id', $id)->firstOrFail();
+
+        // Cek tipe aksi (increment / decrement)
+        if ($request->type === 'increment') {
+            // Cek stok dulu sebelum nambah
+            if ($cart->product->stock > $cart->quantity) {
+                $cart->increment('quantity');
+            } else {
+                return back()->with('error', 'Stok maksimal tercapai!');
+            }
+        } elseif ($request->type === 'decrement') {
+            // Minimal sisa 1, kalau mau hapus pakai tombol sampah
+            if ($cart->quantity > 1) {
+                $cart->decrement('quantity');
+            }
+        }
+
+        return back(); // Kembali ke halaman cart tanpa refresh data manual
+    }
+
     // Menambah item ke keranjang
     public function store(Request $request)
     {
