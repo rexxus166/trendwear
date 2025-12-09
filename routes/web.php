@@ -20,6 +20,16 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
         return view('page.admin.dashboard.index');
     })->name('admin.dashboard');
 
+    // Route Produk
+    Route::get('/products', function () {
+        return view('page.admin.produk.index');
+    })->name('admin.products');
+
+    // Route Pesanan
+    Route::get('/orders', function () {
+        return view('page.admin.pesanan.index');
+    })->name('admin.orders');
+
     // Tambahkan route admin lainnya di sini...
 });
 
