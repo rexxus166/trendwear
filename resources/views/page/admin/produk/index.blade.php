@@ -7,9 +7,10 @@
         showProductModal: false, 
         showEditModal: false, 
         showCategoryModal: false,
-        files: [], // Untuk file baru yang akan diupload
-        
-        // Data Form Edit
+        files: [],
+        dt: new DataTransfer(),
+
+        // Data Form Edit (Updated with Status)
         editForm: {
             id: null,
             name: '',
@@ -18,14 +19,16 @@
             stock: '',
             sku: '',
             description: '',
+            status: '', // <--- Tambahan untuk Status
             actionUrl: '',
-            existingImages: [] // Menampung gambar lama dari database
+            existingImages: []
         },
 
-        // Handler File Baru (Upload)
         handleFileSelect(event) {
-            const selectedFiles = Array.from(event.target.files);
-            selectedFiles.forEach(file => {
+            const input = event.target;
+            const newFiles = Array.from(input.files);
+            newFiles.forEach(file => {
+                this.dt.items.add(file);
                 if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
                     this.files.push({
                         url: URL.createObjectURL(file),
@@ -34,12 +37,24 @@
                     });
                 }
             });
+            // Update input ref yang sesuai (tambah logika cek ref aktif nanti di html)
+            if(this.$refs.mediaInput) this.$refs.mediaInput.files = this.dt.files;
+            if(this.$refs.mediaInputEdit) this.$refs.mediaInputEdit.files = this.dt.files;
         },
+
         removeFile(index) {
             this.files.splice(index, 1);
+            this.dt.items.remove(index);
+            if(this.$refs.mediaInput) this.$refs.mediaInput.files = this.dt.files;
+            if(this.$refs.mediaInputEdit) this.$refs.mediaInputEdit.files = this.dt.files;
+        },
+
+        resetAddModal() {
+            this.showProductModal = true; 
+            this.files = []; 
+            this.dt = new DataTransfer(); 
         },
         
-        // Buka Modal Edit & Load Data
         openEditModal(product) {
             this.editForm.id = product.id;
             this.editForm.name = product.name;
@@ -48,33 +63,24 @@
             this.editForm.stock = product.stock;
             this.editForm.sku = product.sku;
             this.editForm.description = product.description;
+            this.editForm.status = product.status; // <--- Load Status Produk
             this.editForm.actionUrl = '/admin/products/' + product.id;
-            
-            // Load gambar lama
             this.editForm.existingImages = product.images; 
             
-            // Reset file upload baru
-            this.files = []; 
+            this.files = [];
+            this.dt = new DataTransfer();
             
             this.showEditModal = true;
         },
 
-        // Fungsi Hapus Gambar Lama (AJAX)
         async deleteImage(imageId, index) {
             if(!confirm('Are you sure want to delete this image?')) return;
-
             try {
-                // Panggil Route Delete yang kita buat tadi
                 let response = await fetch('/admin/product-images/' + imageId, {
                     method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Content-Type': 'application/json'
-                    }
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Content-Type': 'application/json' }
                 });
-
                 if (response.ok) {
-                    // Jika sukses, hapus dari tampilan array existingImages
                     this.editForm.existingImages.splice(index, 1);
                 } else {
                     alert('Failed to delete image.');
@@ -113,7 +119,7 @@
                     <button @click="showCategoryModal = true" class="px-6 py-3 border border-gray-200 bg-white text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium flex items-center gap-2">
                         Add Category
                     </button>
-                    <button @click="showProductModal = true; files = []" class="px-6 py-3 bg-black text-white rounded-xl hover:bg-gray-800 transition-colors font-medium flex items-center gap-2">
+                    <button @click="resetAddModal()" class="px-6 py-3 bg-black text-white rounded-xl hover:bg-gray-800 transition-colors font-medium flex items-center gap-2">
                         + Add New Product
                     </button>
                 </div>
@@ -158,15 +164,35 @@
                                 <td class="px-6 py-4 text-sm font-semibold">Rp {{ number_format($product->price, 0, ',', '.') }}</td>
                                 <td class="px-6 py-4 text-sm">{{ $product->stock }}</td>
                                 <td class="px-6 py-4">
-                                    <span class="px-2 py-1 text-xs rounded-full font-medium {{ $product->status == 'active' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600' }}">
-                                        {{ ucfirst(str_replace('_', ' ', $product->status)) }}
+                                    @php
+                                        $statusClasses = [
+                                            'active' => 'bg-green-100 text-green-600',
+                                            'draft' => 'bg-gray-100 text-gray-600', // Draft = Arsip
+                                            'out_of_stock' => 'bg-red-100 text-red-600'
+                                        ];
+                                        $statusLabel = [
+                                            'active' => 'Active',
+                                            'draft' => 'Archived',
+                                            'out_of_stock' => 'Out of Stock'
+                                        ];
+                                    @endphp
+                                    <span class="px-2 py-1 text-xs rounded-full font-medium {{ $statusClasses[$product->status] ?? 'bg-gray-100' }}">
+                                        {{ $statusLabel[$product->status] ?? $product->status }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-2">
-                                        <button @click="openEditModal({{ $product }})" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-black transition-colors">
+                                        <button @click="openEditModal({{ $product->load('images') }})" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-black transition-colors" title="Edit">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                         </button>
+                                        
+                                        <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete {{ $product->name }}? This action cannot be undone.')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="p-2 hover:bg-red-50 rounded-lg text-gray-400 hover:text-red-500 transition-colors" title="Delete">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
@@ -191,26 +217,22 @@
                 <div class="p-6">
                     <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                         @csrf
-                        
                         <div>
                             <label class="block text-sm font-medium mb-2">Product Media</label>
                             <div class="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center hover:bg-gray-50 relative">
-                                <input type="file" name="media[]" multiple @change="handleFileSelect" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                                <input type="file" name="media[]" multiple x-ref="mediaInput" @change="handleFileSelect" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                                 <p class="text-sm text-gray-500">Drag & drop or click to upload</p>
                             </div>
                             <div class="grid grid-cols-4 gap-4 mt-4" x-show="files.length > 0">
                                 <template x-for="(file, index) in files" :key="index">
-                                    <div class="relative aspect-square rounded-xl overflow-hidden border border-gray-200 group">
+                                    <div class="relative aspect-square rounded-xl overflow-hidden border border-gray-200">
                                         <template x-if="file.type.startsWith('image/')"><img :src="file.url" class="w-full h-full object-cover"></template>
                                         <template x-if="file.type.startsWith('video/')"><video :src="file.url" class="w-full h-full object-cover"></video></template>
-                                        <button type="button" @click="removeFile(index)" class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                        </button>
+                                        <button type="button" @click="removeFile(index)" class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
                                     </div>
                                 </template>
                             </div>
                         </div>
-
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="md:col-span-2">
                                 <label class="block text-sm font-medium mb-2">Product Name</label>
@@ -263,18 +285,31 @@
                         @csrf
                         @method('PUT')
                         
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <label class="block text-sm font-bold mb-2">Product Status</label>
+                            <div class="flex gap-4">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="status" value="active" x-model="editForm.status" class="w-4 h-4 text-green-600 focus:ring-green-500">
+                                    <span class="text-sm font-medium text-green-700">Aktif (Show)</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="status" value="draft" x-model="editForm.status" class="w-4 h-4 text-gray-600 focus:ring-gray-500">
+                                    <span class="text-sm font-medium text-gray-700">Arsip (Hide)</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="status" value="out_of_stock" x-model="editForm.status" class="w-4 h-4 text-red-600 focus:ring-red-500">
+                                    <span class="text-sm font-medium text-red-700">Out of Stock</span>
+                                </label>
+                            </div>
+                        </div>
+
                         <div x-show="editForm.existingImages.length > 0">
                             <label class="block text-sm font-medium mb-2">Existing Media</label>
                             <div class="grid grid-cols-4 gap-4">
                                 <template x-for="(img, index) in editForm.existingImages" :key="img.id">
                                     <div class="relative aspect-square rounded-xl overflow-hidden border border-gray-200 group">
-                                        <template x-if="img.file_type === 'image'">
-                                            <img :src="'/storage/' + img.file_path" class="w-full h-full object-cover">
-                                        </template>
-                                        <template x-if="img.file_type === 'video'">
-                                            <video :src="'/storage/' + img.file_path" class="w-full h-full object-cover"></video>
-                                        </template>
-                                        
+                                        <template x-if="img.file_type === 'image'"><img :src="'/storage/' + img.file_path" class="w-full h-full object-cover"></template>
+                                        <template x-if="img.file_type === 'video'"><video :src="'/storage/' + img.file_path" class="w-full h-full object-cover"></video></template>
                                         <button type="button" @click="deleteImage(img.id, index)" class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                         </button>
@@ -284,9 +319,9 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium mb-2">Add New Media</label>
+                            <label class="block text-sm font-medium mb-2">Add More Media</label>
                             <div class="border-2 border-dashed border-gray-300 rounded-2xl p-4 text-center hover:bg-gray-50 relative">
-                                <input type="file" name="media[]" multiple @change="handleFileSelect" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                                <input type="file" name="media[]" multiple x-ref="mediaInputEdit" @change="handleFileSelect" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                                 <p class="text-sm text-gray-500">Click to upload new images</p>
                             </div>
                             <div class="grid grid-cols-4 gap-4 mt-4" x-show="files.length > 0">

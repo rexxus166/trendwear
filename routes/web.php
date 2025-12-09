@@ -27,6 +27,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::get('/products', [ProductController::class, 'index'])->name('admin.products');
     Route::post('/products', [ProductController::class, 'store'])->name('admin.products.store');
     Route::put('/products/{product}', [ProductController::class, 'update'])->name('admin.products.update');
+    //Route Delete Product
+    Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('admin.products.destroy');
 
     //Route untuk hapus gambar spesifik
     Route::delete('/product-images/{id}', [ProductController::class, 'destroyImage'])->name('admin.products.delete-image');
