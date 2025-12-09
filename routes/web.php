@@ -30,6 +30,21 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
         return view('page.admin.pesanan.index');
     })->name('admin.orders');
 
+    // Route Pelanggan
+    Route::get('/customers', function () {
+        return view('page.admin.pelanggan.index');
+    })->name('admin.customers');
+
+    // Route Analisis
+    Route::get('/analytics', function () {
+        return view('page.admin.analisis.index');
+    })->name('admin.analytics');
+
+    // Route Pengaturan
+    Route::get('/pengaturan', function () {
+        return view('page.admin.pengaturan.index');
+    })->name('admin.pengaturan');
+
     // Tambahkan route admin lainnya di sini...
 });
 

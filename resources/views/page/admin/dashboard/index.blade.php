@@ -7,7 +7,7 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
                 <h1 class="text-2xl font-bold mb-1 text-gray-900">Dashboard</h1>
-                <p class="text-gray-500 text-sm">Welcome back, {{ Auth::user()->name }}! Here's what's happening today.</p>
+                <p class="text-gray-500 text-sm">Selamat datang kembali, {{ Auth::user()->name }}! Berikut kabar terbaru hari ini.</p>
             </div>
             <div class="flex items-center gap-3">
                 <button class="p-2.5 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors text-gray-600">
