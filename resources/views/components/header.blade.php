@@ -11,10 +11,26 @@
                 </div>
 
                 <nav class="hidden lg:flex items-center gap-6 text-sm font-medium text-gray-600">
-                    <a href="{{ route('dashboard') }}" class="text-black hover:text-black">Home</a>
-                    <a href="#" class="hover:text-black transition-colors">Shop</a>
-                    <a href="#" class="hover:text-black transition-colors">Collections</a>
-                    <a href="#" class="hover:text-black transition-colors">New Arrivals</a>
+    
+                    <a href="{{ route('dashboard') }}" 
+                    class="transition-colors {{ request()->routeIs('dashboard') ? 'text-black font-bold' : 'hover:text-black' }}">
+                    Home
+                    </a>
+
+                    <a href="{{ route('shop') }}" 
+                    class="transition-colors {{ request()->routeIs('shop') || request()->routeIs('category.show') || request()->routeIs('product.detail') ? 'text-black font-bold' : 'hover:text-black' }}">
+                    Shop
+                    </a>
+
+                    <a href="#" class="hover:text-black transition-colors">
+                        Collections
+                    </a>
+
+                    <a href="{{ route('trending') }}" 
+                    class="transition-colors {{ request()->routeIs('trending') ? 'text-black font-bold' : 'hover:text-black' }}">
+                    New Arrivals
+                    </a>
+
                 </nav>
             </div>
 

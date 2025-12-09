@@ -385,13 +385,20 @@
                     <button @click="showCategoryModal = false" class="text-gray-400 hover:text-gray-600">X</button>
                 </div>
                 <div class="p-6">
-                    <form action="{{ route('admin.categories.store') }}" method="POST">
+                    <form action="{{ route('admin.categories.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium mb-2">Category Name</label>
-                                <input type="text" name="name" required class="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200">
+                                <input type="text" name="name" required placeholder="e.g. Accessories" class="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200">
                             </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Category Image (Optional)</label>
+                                <input type="file" name="image" accept="image/*" class="w-full px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800">
+                                <p class="text-xs text-gray-500 mt-1">Recommended size: Square (e.g., 500x500px)</p>
+                            </div>
+
                         </div>
                         <div class="flex gap-3 pt-6">
                             <button type="button" @click="showCategoryModal = false" class="flex-1 px-6 py-3 border rounded-xl">Cancel</button>
@@ -401,6 +408,5 @@
                 </div>
             </div>
         </div>
-
     </div>
 @endsection

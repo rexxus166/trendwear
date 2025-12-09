@@ -14,10 +14,10 @@
                 <span class="inline-block px-4 py-1.5 bg-white/20 backdrop-blur-md rounded-full text-xs lg:text-sm mb-4 border border-white/30 tracking-wider uppercase font-medium">Winter Collection 2025</span>
                 <h2 class="text-4xl lg:text-7xl font-bold mb-6 leading-tight">Street <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">Essentials</span></h2>
                 <p class="text-gray-200 mb-8 text-lg lg:text-xl max-w-lg leading-relaxed">Define your style with our curated pieces designed for the modern urban explorer.</p>
-                <button class="px-8 py-4 bg-white text-black rounded-full inline-flex items-center gap-3 hover:bg-gray-100 transition-all font-bold shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:scale-105 active:scale-95">
+                <a href="{{ route('shop') }}" class="px-8 py-4 bg-white text-black rounded-full inline-flex items-center gap-3 hover:bg-gray-100 transition-all font-bold shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:scale-105 active:scale-95">
                     Shop Collection
                     <svg class="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-                </button>
+                </a>
             </div>
         </div>
     </section>
@@ -25,26 +25,39 @@
     <section class="px-5 py-8 lg:px-12 lg:py-16">
         <div class="flex items-center justify-between mb-8">
             <h3 class="text-2xl font-bold tracking-tight">Shop by Category</h3>
-            <a href="#" class="text-sm font-semibold text-gray-500 hover:text-black flex items-center gap-2 group transition-colors">
+            <a href="{{ route('shop') }}" class="text-sm font-semibold text-gray-500 hover:text-black flex items-center gap-2 group transition-colors">
                 View All <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-black group-hover:text-white transition-colors"><svg class="w-3 h-3 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
             </a>
         </div>
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-8">
             @forelse($categories as $category)
-                <button class="group relative h-48 lg:h-64 bg-gray-100 rounded-3xl overflow-hidden hover:shadow-lg transition-all text-left">
-                    <div class="absolute inset-0 bg-gray-200 transition-colors group-hover:bg-gray-300"></div>
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-white/30 rounded-full -translate-y-10 translate-x-10 transition-transform group-hover:scale-150 duration-700 blur-2xl"></div>
+                <a href="{{ route('category.show', $category->slug) }}" class="group relative h-48 lg:h-64 bg-gray-100 rounded-3xl overflow-hidden hover:shadow-lg transition-all text-left block">
+                    
+                    @if($category->image_path)
+                        <img src="{{ asset('storage/' . $category->image_path) }}" alt="{{ $category->name }}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
+                    @else
+                        <div class="absolute inset-0 bg-gray-200 transition-colors group-hover:bg-gray-300"></div>
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-white/30 rounded-full -translate-y-10 translate-x-10 transition-transform group-hover:scale-150 duration-700 blur-2xl"></div>
+                    @endif
+
                     
                     <div class="absolute inset-0 p-6 flex flex-col justify-end z-10">
-                        <h4 class="text-xl font-bold mb-1 group-hover:translate-x-1 transition-transform">{{ $category->name }}</h4>
-                        <p class="text-sm text-gray-500 group-hover:translate-x-1 transition-transform delay-75">{{ $category->products_count }} items</p>
+                        <h4 class="text-xl font-bold mb-1 group-hover:translate-x-1 transition-transform text-white md:text-gray-900 md:group-hover:text-white {{ $category->image_path ? '!text-white' : '' }}">
+                            {{ $category->name }}
+                        </h4>
+                        <p class="text-sm text-white/80 md:text-gray-500 md:group-hover:text-white/80 transition-transform delay-75 {{ $category->image_path ? '!text-white/80' : '' }}">
+                            {{ $category->products_count }} items
+                        </p>
                     </div>
                     
                     <div class="absolute top-4 right-4 w-8 h-8 bg-white rounded-full flex items-center justify-center opacity-0 -translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                        <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
                     </div>
-                </button>
+                </a>
             @empty
                 <div class="col-span-full text-center text-gray-500 py-10">No categories found.</div>
             @endforelse
@@ -54,7 +67,7 @@
     <section class="px-5 py-8 lg:px-12">
         <div class="flex items-center justify-between mb-8">
             <h3 class="text-2xl font-bold tracking-tight">Trending Now</h3>
-            <a href="#" class="text-sm font-semibold text-gray-500 hover:text-black flex items-center gap-2 group transition-colors">
+            <a href="{{ route('trending') }}" class="text-sm font-semibold text-gray-500 hover:text-black flex items-center gap-2 group transition-colors">
                 See More <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-black group-hover:text-white transition-colors"><svg class="w-3 h-3 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
             </a>
         </div>
@@ -69,13 +82,13 @@
                         @if($product->images->isNotEmpty())
                             @if($product->images->first()->file_type == 'video')
                                 <video src="{{ asset('storage/' . $product->images->first()->file_path) }}" 
-                                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
-                                    autoplay muted loop playsinline>
+                                       class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                                       autoplay muted loop playsinline>
                                 </video>
                             @else
                                 <img src="{{ asset('storage/' . $product->images->first()->file_path) }}" 
-                                    alt="{{ $product->name }}" 
-                                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                                     alt="{{ $product->name }}" 
+                                     class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
                             @endif
                         @else
                             <div class="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400">

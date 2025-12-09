@@ -11,6 +11,7 @@ class Category extends Model
 
     // Kita gunakan guarded id agar semua kolom lain bisa diisi (mass assignment)
     protected $guarded = ['id'];
+    protected $fillable = ['name', 'slug', 'image_path'];
 
     // Relasi: Satu kategori bisa punya banyak produk
     public function products()

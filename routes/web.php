@@ -1,71 +1,98 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CartController;
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\CategoryController;
-use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-// --- RUTE UNTUK USER BIASA (MEMBER) ---
-Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified', 'role:user'])->name('dashboard');
-// Halaman Detail Produk (BARU)
-Route::get('/product/{slug}', [DashboardController::class, 'show'])->name('product.detail');
+// ==========================================
+// RUTE UNTUK USER BIASA (MEMBER)
+// ==========================================
+Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
 
-// --- RUTE UNTUK CART ---
-Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
-Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
-Route::patch('/cart/{id}', [CartController::class, 'update'])->name('cart.update');
-Route::delete('/cart/{id}', [CartController::class, 'destroy'])->name('cart.destroy');
+    // --- Dashboard & Shop Pages ---
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Halaman Shop (Semua Produk)
+    Route::get('/product/all', [DashboardController::class, 'shop'])->name('shop');
+
+    // Halaman Kategori Spesifik
+    Route::get('/category/{slug}', [DashboardController::class, 'category'])->name('category.show');
+
+    // Halaman Trending
+    Route::get('/trending', [DashboardController::class, 'trending'])->name('trending');
+
+    // Detail Produk
+    Route::get('/product/{slug}', [DashboardController::class, 'show'])->name('product.detail');
+
+    // --- Shopping Cart ---
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart', [CartController::class, 'store'])->name('cart.store');       // Tambah item
+    Route::patch('/cart/{id}', [CartController::class, 'update'])->name('cart.update'); // Update qty
+    Route::delete('/cart/{id}', [CartController::class, 'destroy'])->name('cart.destroy'); // Hapus item
+
+});
 
 
-// --- RUTE UNTUK ADMIN ---
+// ==========================================
+// RUTE UNTUK ADMIN
+// ==========================================
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 
-    // Dashboard
+    // --- Dashboard ---
     Route::get('/dashboard', function () {
         return view('page.admin.dashboard.index');
     })->name('admin.dashboard');
 
-    // --- MODULE PRODUCTS ---
+    // --- Module Products (CRUD) ---
     Route::get('/products', [ProductController::class, 'index'])->name('admin.products');
     Route::post('/products', [ProductController::class, 'store'])->name('admin.products.store');
     Route::put('/products/{product}', [ProductController::class, 'update'])->name('admin.products.update');
-    //Route Delete Product
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('admin.products.destroy');
 
-    //Route untuk hapus gambar spesifik
+    // Hapus Gambar Spesifik via AJAX
     Route::delete('/product-images/{id}', [ProductController::class, 'destroyImage'])->name('admin.products.delete-image');
 
+    // --- Module Categories ---
     Route::post('/categories', [CategoryController::class, 'store'])->name('admin.categories.store');
 
-    // --- MODULE ORDERS ---
+    // --- Module Orders ---
     Route::get('/orders', function () {
         return view('page.admin.pesanan.index');
     })->name('admin.orders');
 
-    // --- MODULE CUSTOMERS ---
+    // --- Module Customers ---
     Route::get('/customers', function () {
         return view('page.admin.pelanggan.index');
     })->name('admin.customers');
 
-    // --- MODULE ANALYTICS ---
+    // --- Module Analytics ---
     Route::get('/analytics', function () {
         return view('page.admin.analisis.index');
     })->name('admin.analytics');
 
-    // --- MODULE SETTINGS ---
+    // --- Module Settings ---
     Route::get('/settings', function () {
         return view('page.admin.pengaturan.index');
     })->name('admin.pengaturan');
 });
 
 
-// Route bawaan Breeze untuk profile
+// ==========================================
+// PROFIL USER (Breeze Default)
+// ==========================================
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
