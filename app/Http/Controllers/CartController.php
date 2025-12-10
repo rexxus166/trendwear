@@ -48,7 +48,10 @@ class CartController extends Controller
     {
         $request->validate([
             'product_id' => 'required|exists:products,id',
-            'quantity' => 'required|integer|min:1'
+            'quantity' => 'required|integer|min:1',
+            'size' => 'nullable|string',
+            'color' => 'nullable|string',
+            'option' => 'nullable|string',
         ]);
 
         $product = Product::find($request->product_id);
@@ -61,6 +64,9 @@ class CartController extends Controller
         // Cek apakah produk sudah ada di keranjang user ini?
         $existingCart = Cart::where('user_id', Auth::id())
             ->where('product_id', $request->product_id)
+            ->where('size', $request->size)     // Cek Size
+            ->where('color', $request->color)   // Cek Color
+            ->where('option', $request->option) // Cek Option
             ->first();
 
         if ($existingCart) {
@@ -73,7 +79,10 @@ class CartController extends Controller
             Cart::create([
                 'user_id' => Auth::id(),
                 'product_id' => $request->product_id,
-                'quantity' => $request->quantity
+                'quantity' => $request->quantity,
+                'size' => $request->size,
+                'color' => $request->color,
+                'option' => $request->option,
             ]);
         }
 
