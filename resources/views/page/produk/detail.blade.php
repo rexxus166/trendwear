@@ -22,11 +22,52 @@
              x-data="{ 
                 activeImage: '{{ $product->images->isNotEmpty() ? ($product->images->first()->file_type == 'video' ? $product->images->first()->file_path : asset('storage/' . $product->images->first()->file_path)) : 'https://via.placeholder.com/500' }}',
                 isVideo: {{ $product->images->isNotEmpty() && $product->images->first()->file_type == 'video' ? 'true' : 'false' }},
+                
+                // State Form
                 qty: 1,
                 selectedOption: '',
                 selectedSize: '',
-                selectedColor: ''
-             }">
+                selectedColor: '',
+
+                // Pricing Logic
+                basePrice: {{ $product->price }},
+                currentPrice: {{ $product->price }},
+                
+                // Ambil data varian JSON dari DB
+                variantsData: @js($product->variants_data ?? []),
+
+                // Fungsi Update Harga
+                updatePrice() {
+                    let finalPrice = this.basePrice;
+
+                    // 1. Cek Harga Option
+                    if (this.selectedOption) {
+                        let optData = this.variantsData.find(v => v.type === 'option' && v.key === this.selectedOption);
+                        if (optData) {
+                            // Tambahkan selisih harga opsi dengan harga dasar
+                            finalPrice += (parseInt(optData.price) - this.basePrice);
+                        }
+                    }
+
+                    // 2. Cek Harga Size
+                    if (this.selectedSize) {
+                        let sizeData = this.variantsData.find(v => v.type === 'size' && v.key === this.selectedSize);
+                        if (sizeData) {
+                            // Tambahkan selisih harga size dengan harga dasar
+                            finalPrice += (parseInt(sizeData.price) - this.basePrice);
+                        }
+                    }
+
+                    this.currentPrice = finalPrice;
+                },
+
+                // Format Rupiah
+                formatRupiah(number) {
+                    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+                }
+             }"
+             x-init="$watch('selectedOption', () => updatePrice()); $watch('selectedSize', () => updatePrice());"
+             >
             
             <div>
                 <div class="aspect-[4/5] lg:aspect-square bg-gray-100 rounded-3xl overflow-hidden mb-4 relative group border border-gray-100">
@@ -63,18 +104,16 @@
                 </div>
 
                 <h1 class="text-2xl lg:text-4xl font-bold mb-4 leading-tight text-gray-900">{{ $product->name }}</h1>
-                <p class="text-3xl font-bold mb-6 text-black">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
+                
+                <p class="text-3xl font-bold mb-6 text-black" x-text="formatRupiah(currentPrice)"></p>
 
                 <div class="mb-8 border-b border-gray-100 pb-8" x-data="{ expanded: false }">
                     <h3 class="text-sm font-bold text-gray-900 mb-3">Description</h3>
-                    
                     <div class="prose prose-sm text-gray-500 leading-relaxed relative transition-all duration-300"
                          :class="!expanded ? 'max-h-24 overflow-hidden' : ''">
                         <p>{!! nl2br(e($product->description)) !!}</p>
-                        
                         <div x-show="!expanded" class="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-white to-transparent"></div>
                     </div>
-
                     @if(strlen($product->description) > 200)
                         <button @click="expanded = !expanded" class="text-sm font-bold underline mt-2 cursor-pointer hover:text-gray-700 focus:outline-none">
                             <span x-text="expanded ? 'Show Less' : 'Read More'"></span>
@@ -91,7 +130,9 @@
 
                     @if(!empty($product->options))
                         <div class="mb-6">
-                            <label class="block text-sm font-bold text-gray-900 mb-3">Select Option</label>
+                            <label class="block text-sm font-bold text-gray-900 mb-3">
+                                Select Option <span class="text-red-500">*</span>
+                            </label>
                             <div class="flex flex-wrap gap-3">
                                 @foreach($product->options as $option)
                                     <button type="button" 
@@ -102,13 +143,17 @@
                                     </button>
                                 @endforeach
                             </div>
-                            <input type="text" x-model="selectedOption" required class="opacity-0 absolute w-0 h-0" oninvalid="this.setCustomValidity('Please select a size')" oninput="this.setCustomValidity('')">
+                            <input type="text" x-model="selectedOption" required class="opacity-0 absolute w-0 h-0 p-0 m-0 -z-10" 
+                                   oninvalid="this.setCustomValidity('Please select an option')" 
+                                   oninput="this.setCustomValidity('')">
                         </div>
                     @endif
 
                     @if(!empty($product->sizes))
                         <div class="mb-6">
-                            <label class="block text-sm font-bold text-gray-900 mb-3">Select Size</label>
+                            <label class="block text-sm font-bold text-gray-900 mb-3">
+                                Select Size <span class="text-red-500">*</span>
+                            </label>
                             <div class="flex flex-wrap gap-3">
                                 @foreach($product->sizes as $size)
                                     <button type="button" 
@@ -119,13 +164,17 @@
                                     </button>
                                 @endforeach
                             </div>
-                            <input type="text" x-model="selectedSize" required class="opacity-0 absolute w-0 h-0" oninvalid="this.setCustomValidity('Please select a size')" oninput="this.setCustomValidity('')">
+                            <input type="text" x-model="selectedSize" required class="opacity-0 absolute w-0 h-0 p-0 m-0 -z-10" 
+                                   oninvalid="this.setCustomValidity('Please select a size')" 
+                                   oninput="this.setCustomValidity('')">
                         </div>
                     @endif
 
                     @if(!empty($product->colors))
                         <div class="mb-8">
-                            <label class="block text-sm font-bold text-gray-900 mb-3">Select Color</label>
+                            <label class="block text-sm font-bold text-gray-900 mb-3">
+                                Select Color <span class="text-red-500">*</span>
+                            </label>
                             <div class="flex flex-wrap gap-3">
                                 @foreach($product->colors as $color)
                                     <button type="button" 
@@ -137,7 +186,9 @@
                                     </button>
                                 @endforeach
                             </div>
-                            <input type="text" x-model="selectedColor" required class="opacity-0 absolute w-0 h-0" oninvalid="this.setCustomValidity('Please select a color')" oninput="this.setCustomValidity('')">
+                            <input type="text" x-model="selectedColor" required class="opacity-0 absolute w-0 h-0 p-0 m-0 -z-10" 
+                                   oninvalid="this.setCustomValidity('Please select a color')" 
+                                   oninput="this.setCustomValidity('')">
                         </div>
                     @endif
 

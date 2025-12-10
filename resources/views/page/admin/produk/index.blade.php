@@ -10,10 +10,13 @@
         files: [],
         dt: new DataTransfer(),
 
-        // Form Edit
+        // Form Edit State
         editForm: {
             id: null, name: '', category_id: '', price: '', stock: '', sku: '', description: '', status: '', actionUrl: '', existingImages: [],
-            options: [], sizes: [], colors: [] 
+            options: [], sizes: [], colors: [],
+            // Pisahkan harga option dan size agar tidak bentrok
+            variantPricesOptions: {}, 
+            variantPricesSizes: {}
         },
 
         // Helper Tag Input
@@ -30,7 +33,6 @@
                 removeTag(index) {
                     this.tags.splice(index, 1);
                 },
-                // Menggabungkan tags jadi string 'S,M,L' untuk dikirim ke backend
                 get valueString() {
                     return this.tags.join(',');
                 }
@@ -78,13 +80,26 @@
             this.files = [];
             this.dt = new DataTransfer();
             
-            // --- FIX PENTING: MENGIRIM DATA VARIAN KE KOMPONEN INPUT ---
+            // Populate Data Varian
             let optionsData = product.options || [];
             let sizesData = product.sizes || [];
             let colorsData = product.colors || [];
             
+            // Populate Harga Varian (Mapping dari variants_data JSON)
+            this.editForm.variantPricesOptions = {};
+            this.editForm.variantPricesSizes = {};
+
+            if(product.variants_data) {
+                product.variants_data.forEach(v => {
+                    if(v.type === 'option') {
+                        this.editForm.variantPricesOptions[v.key] = v.price;
+                    } else if (v.type === 'size') {
+                        this.editForm.variantPricesSizes[v.key] = v.price;
+                    }
+                });
+            }
+
             this.$nextTick(() => {
-                // Kita kirim sinyal (dispatch) agar input tag di modal edit merespon
                 this.$dispatch('set-edit-options', optionsData);
                 this.$dispatch('set-edit-sizes', sizesData);
                 this.$dispatch('set-edit-colors', colorsData);
@@ -108,7 +123,6 @@
         @if(session('success'))
             <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)" class="fixed top-5 right-5 z-50 bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg transition-all">{{ session('success') }}</div>
         @endif
-
         @if ($errors->any())
             <div class="fixed top-5 right-5 z-50 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-lg max-w-sm">
                 <p class="font-bold">Error</p><ul class="text-sm list-disc pl-4">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
@@ -155,9 +169,10 @@
                                 <td class="px-6 py-4 text-sm">{{ $product->category->name ?? '-' }}</td>
                                 <td class="px-6 py-4 text-sm">
                                     <div class="flex flex-wrap gap-1 max-w-[150px]">
+                                        @if($product->options) @foreach($product->options as $opt) <span class="px-1.5 py-0.5 bg-blue-100 text-blue-600 text-[10px] rounded border">{{ $opt }}</span> @endforeach @endif
                                         @if($product->sizes) @foreach($product->sizes as $size) <span class="px-1.5 py-0.5 bg-gray-100 text-gray-600 text-[10px] rounded border">{{ $size }}</span> @endforeach @endif
                                         @if($product->colors) @foreach($product->colors as $color) <span class="px-1.5 py-0.5 bg-black text-white text-[10px] rounded">{{ $color }}</span> @endforeach @endif
-                                        @if(!$product->sizes && !$product->colors) - @endif
+                                        @if(!$product->sizes && !$product->colors && !$product->options) - @endif
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-sm font-semibold">Rp {{ number_format($product->price, 0, ',', '.') }}</td>
@@ -207,26 +222,57 @@
                         <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
                             <h4 class="font-bold text-sm mb-4">Variations (Optional)</h4>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                
                                 <div x-data="tagInput()">
-                                    <label class="block text-sm font-medium mb-2">Opsi Tambahan</label>
-                                    <div class="flex flex-wrap gap-2 p-2 bg-white border rounded-xl focus-within:ring-2 focus-within:ring-black">
+                                    <label class="block text-sm font-medium mb-2">Options (Type & Enter)</label>
+                                    <div class="flex flex-wrap gap-2 p-2 bg-white border rounded-xl mb-2">
                                         <template x-for="(tag, index) in tags" :key="index">
                                             <span class="bg-gray-100 text-gray-800 text-xs font-semibold px-2 py-1 rounded flex items-center gap-1"><span x-text="tag"></span><button type="button" @click="removeTag(index)" class="text-gray-500 hover:text-red-500">&times;</button></span>
                                         </template>
-                                        <input type="text" x-model="newTag" @keydown.enter.prevent="addTag()" @keydown.comma.prevent="addTag()" placeholder="Panjang, Pendek, ..." class="flex-1 outline-none text-sm bg-transparent min-w-[60px]">
+                                        <input type="text" x-model="newTag" @keydown.enter.prevent="addTag()" @keydown.comma.prevent="addTag()" class="flex-1 outline-none text-sm bg-transparent min-w-[60px]">
                                     </div>
                                     <input type="hidden" name="options" :value="valueString">
+                                    <template x-if="tags.length > 0">
+                                        <div class="space-y-2 mt-2">
+                                            <p class="text-xs font-bold text-gray-500 uppercase">Set Price per Option</p>
+                                            <template x-for="(tag, index) in tags" :key="index">
+                                                <div class="flex items-center gap-2">
+                                                    <div class="w-auto px-2 h-9 flex items-center justify-center bg-white border rounded text-xs font-bold truncate max-w-[80px]" x-text="tag"></div>
+                                                    <div class="relative flex-1">
+                                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">Rp</span>
+                                                        <input type="number" :name="'variants_prices_options['+tag+']'" placeholder="Price" class="w-full pl-8 pr-3 py-2 text-sm border rounded focus:ring-1 focus:ring-black">
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
                                 </div>
+
                                 <div x-data="tagInput()">
                                     <label class="block text-sm font-medium mb-2">Sizes (Type & Enter)</label>
-                                    <div class="flex flex-wrap gap-2 p-2 bg-white border rounded-xl focus-within:ring-2 focus-within:ring-black">
+                                    <div class="flex flex-wrap gap-2 p-2 bg-white border rounded-xl mb-2">
                                         <template x-for="(tag, index) in tags" :key="index">
                                             <span class="bg-gray-100 text-gray-800 text-xs font-semibold px-2 py-1 rounded flex items-center gap-1"><span x-text="tag"></span><button type="button" @click="removeTag(index)" class="text-gray-500 hover:text-red-500">&times;</button></span>
                                         </template>
                                         <input type="text" x-model="newTag" @keydown.enter.prevent="addTag()" @keydown.comma.prevent="addTag()" placeholder="S, M, L..." class="flex-1 outline-none text-sm bg-transparent min-w-[60px]">
                                     </div>
                                     <input type="hidden" name="sizes" :value="valueString">
+                                    <template x-if="tags.length > 0">
+                                        <div class="space-y-2 mt-2">
+                                            <p class="text-xs font-bold text-gray-500 uppercase">Set Price per Size</p>
+                                            <template x-for="(tag, index) in tags" :key="index">
+                                                <div class="flex items-center gap-2">
+                                                    <div class="w-10 h-9 flex items-center justify-center bg-white border rounded text-xs font-bold" x-text="tag"></div>
+                                                    <div class="relative flex-1">
+                                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">Rp</span>
+                                                        <input type="number" :name="'variants_prices_sizes['+tag+']'" placeholder="Price" class="w-full pl-8 pr-3 py-2 text-sm border rounded focus:ring-1 focus:ring-black">
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
                                 </div>
+
                                 <div x-data="tagInput()">
                                     <label class="block text-sm font-medium mb-2">Colors (Type & Enter)</label>
                                     <div class="flex flex-wrap gap-2 p-2 bg-white border rounded-xl focus-within:ring-2 focus-within:ring-black">
@@ -243,7 +289,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="md:col-span-2"><label class="block text-sm font-medium mb-2">Product Name</label><input type="text" name="name" required class="w-full px-4 py-3 bg-gray-50 border rounded-xl"></div>
                             <div><label class="block text-sm font-medium mb-2">Category</label><select name="category_id" required class="w-full px-4 py-3 bg-gray-50 border rounded-xl"><option value="">Select Category</option>@foreach($categories as $category)<option value="{{ $category->id }}">{{ $category->name }}</option>@endforeach</select></div>
-                            <div><label class="block text-sm font-medium mb-2">Price (IDR)</label><input type="number" name="price" required class="w-full px-4 py-3 bg-gray-50 border rounded-xl"></div>
+                            <div><label class="block text-sm font-medium mb-2">Base Price (IDR)</label><input type="number" name="price" required class="w-full px-4 py-3 bg-gray-50 border rounded-xl"></div>
                             <div class="md:col-span-2"><label class="block text-sm font-medium mb-2">Description</label><textarea name="description" rows="4" class="w-full px-4 py-3 bg-gray-50 border rounded-xl"></textarea></div>
                             <div><label class="block text-sm font-medium mb-2">Stock</label><input type="number" name="stock" required class="w-full px-4 py-3 bg-gray-50 border rounded-xl"></div>
                             <div><label class="block text-sm font-medium mb-2">SKU</label><input type="text" name="sku" required class="w-full px-4 py-3 bg-gray-50 border rounded-xl"></div>
@@ -300,31 +346,63 @@
                             <h4 class="font-bold text-sm mb-4">Variations (Optional)</h4>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div x-data="tagInput()" @set-edit-options.window="tags = $event.detail">
-                                    <label class="block text-sm font-medium mb-2">Opsi Tambahan</label>
-                                    <div class="flex flex-wrap gap-2 p-2 bg-white border rounded-xl focus-within:ring-2 focus-within:ring-black">
-                                        <template x-for="(tag, index) in tags" :key="index">
-                                            <span class="bg-gray-100 text-gray-800 text-xs font-semibold px-2 py-1 rounded flex items-center gap-1"><span x-text="tag"></span><button type="button" @click="removeTag(index)" class="text-gray-500 hover:text-red-500">&times;</button></span>
-                                        </template>
+                                    <label class="block text-sm font-medium mb-2">Options</label>
+                                    <div class="flex flex-wrap gap-2 p-2 bg-white border rounded-xl">
+                                        <template x-for="(tag, index) in tags" :key="index"><span class="bg-gray-100 text-gray-800 text-xs font-semibold px-2 py-1 rounded flex items-center gap-1"><span x-text="tag"></span><button type="button" @click="removeTag(index)" class="text-gray-500 hover:text-red-500">&times;</button></span></template>
                                         <input type="text" x-model="newTag" @keydown.enter.prevent="addTag()" @keydown.comma.prevent="addTag()" class="flex-1 outline-none text-sm bg-transparent min-w-[60px]">
                                     </div>
                                     <input type="hidden" name="options" :value="valueString">
+                                    <template x-if="tags.length > 0">
+                                        <div class="space-y-2 mt-2">
+                                            <p class="text-xs font-bold text-gray-500 uppercase">Set Price per Option</p>
+                                            <template x-for="(tag, index) in tags" :key="index">
+                                                <div class="flex items-center gap-2">
+                                                    <div class="w-auto px-2 h-9 flex items-center justify-center bg-white border rounded text-xs font-bold truncate max-w-[80px]" x-text="tag"></div>
+                                                    <div class="relative flex-1">
+                                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">Rp</span>
+                                                        <input type="number" 
+                                                               :name="'variants_prices_options['+tag+']'" 
+                                                               :value="editForm.variantPricesOptions[tag] || editForm.price"
+                                                               placeholder="Price" 
+                                                               class="w-full pl-8 pr-3 py-2 text-sm border rounded focus:ring-1 focus:ring-black">
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
                                 </div>
+
                                 <div x-data="tagInput()" @set-edit-sizes.window="tags = $event.detail">
                                     <label class="block text-sm font-medium mb-2">Sizes</label>
-                                    <div class="flex flex-wrap gap-2 p-2 bg-white border rounded-xl focus-within:ring-2 focus-within:ring-black">
-                                        <template x-for="(tag, index) in tags" :key="index">
-                                            <span class="bg-gray-100 text-gray-800 text-xs font-semibold px-2 py-1 rounded flex items-center gap-1"><span x-text="tag"></span><button type="button" @click="removeTag(index)" class="text-gray-500 hover:text-red-500">&times;</button></span>
-                                        </template>
+                                    <div class="flex flex-wrap gap-2 p-2 bg-white border rounded-xl mb-3">
+                                        <template x-for="(tag, index) in tags" :key="index"><span class="bg-gray-100 text-gray-800 text-xs font-semibold px-2 py-1 rounded flex items-center gap-1"><span x-text="tag"></span><button type="button" @click="removeTag(index)" class="text-gray-500 hover:text-red-500">&times;</button></span></template>
                                         <input type="text" x-model="newTag" @keydown.enter.prevent="addTag()" @keydown.comma.prevent="addTag()" class="flex-1 outline-none text-sm bg-transparent min-w-[60px]">
                                     </div>
                                     <input type="hidden" name="sizes" :value="valueString">
+                                    <template x-if="tags.length > 0">
+                                        <div class="space-y-2 mt-2">
+                                            <p class="text-xs font-bold text-gray-500 uppercase">Set Price per Size</p>
+                                            <template x-for="(tag, index) in tags" :key="index">
+                                                <div class="flex items-center gap-2">
+                                                    <div class="w-10 h-9 flex items-center justify-center bg-white border rounded text-xs font-bold" x-text="tag"></div>
+                                                    <div class="relative flex-1">
+                                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">Rp</span>
+                                                        <input type="number" 
+                                                               :name="'variants_prices_sizes['+tag+']'" 
+                                                               :value="editForm.variantPricesSizes[tag] || editForm.price"
+                                                               placeholder="Price" 
+                                                               class="w-full pl-8 pr-3 py-2 text-sm border rounded focus:ring-1 focus:ring-black">
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
                                 </div>
+
                                 <div x-data="tagInput()" @set-edit-colors.window="tags = $event.detail">
                                     <label class="block text-sm font-medium mb-2">Colors</label>
-                                    <div class="flex flex-wrap gap-2 p-2 bg-white border rounded-xl focus-within:ring-2 focus-within:ring-black">
-                                        <template x-for="(tag, index) in tags" :key="index">
-                                            <span class="bg-black text-white text-xs font-semibold px-2 py-1 rounded flex items-center gap-1"><span x-text="tag"></span><button type="button" @click="removeTag(index)" class="text-white hover:text-gray-300">&times;</button></span>
-                                        </template>
+                                    <div class="flex flex-wrap gap-2 p-2 bg-white border rounded-xl">
+                                        <template x-for="(tag, index) in tags" :key="index"><span class="bg-black text-white text-xs font-semibold px-2 py-1 rounded flex items-center gap-1"><span x-text="tag"></span><button type="button" @click="removeTag(index)" class="text-white hover:text-gray-300">&times;</button></span></template>
                                         <input type="text" x-model="newTag" @keydown.enter.prevent="addTag()" @keydown.comma.prevent="addTag()" class="flex-1 outline-none text-sm bg-transparent min-w-[60px]">
                                     </div>
                                     <input type="hidden" name="colors" :value="valueString">
@@ -335,7 +413,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="md:col-span-2"><label class="block text-sm font-medium mb-2">Product Name</label><input type="text" name="name" x-model="editForm.name" required class="w-full px-4 py-3 bg-gray-50 border rounded-xl"></div>
                             <div><label class="block text-sm font-medium mb-2">Category</label><select name="category_id" x-model="editForm.category_id" required class="w-full px-4 py-3 bg-gray-50 border rounded-xl"><option value="">Select Category</option>@foreach($categories as $category)<option value="{{ $category->id }}">{{ $category->name }}</option>@endforeach</select></div>
-                            <div><label class="block text-sm font-medium mb-2">Price (IDR)</label><input type="number" name="price" x-model="editForm.price" required class="w-full px-4 py-3 bg-gray-50 border rounded-xl"></div>
+                            <div><label class="block text-sm font-medium mb-2">Base Price (IDR)</label><input type="number" name="price" x-model="editForm.price" required class="w-full px-4 py-3 bg-gray-50 border rounded-xl"></div>
                             <div class="md:col-span-2"><label class="block text-sm font-medium mb-2">Description</label><textarea name="description" x-model="editForm.description" rows="4" class="w-full px-4 py-3 bg-gray-50 border rounded-xl"></textarea></div>
                             <div><label class="block text-sm font-medium mb-2">Stock</label><input type="number" name="stock" x-model="editForm.stock" required class="w-full px-4 py-3 bg-gray-50 border rounded-xl"></div>
                             <div><label class="block text-sm font-medium mb-2">SKU</label><input type="text" name="sku" x-model="editForm.sku" required class="w-full px-4 py-3 bg-gray-50 border rounded-xl"></div>

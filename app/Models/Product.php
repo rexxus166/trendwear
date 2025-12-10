@@ -11,9 +11,10 @@ class Product extends Model
 
     protected $guarded = ['id'];
     protected $casts = [
-        'options' => 'array',
         'sizes' => 'array',
         'colors' => 'array',
+        'options' => 'array',
+        'variants_data' => 'array',
     ];
 
     // Relasi: Produk milik satu kategori

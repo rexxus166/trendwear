@@ -16,12 +16,20 @@ return new class extends Migration
             $table->foreignId('category_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->string('slug')->unique();
-            $table->decimal('price', 15, 2); // 15 digit, 2 desimal
+
+            $table->decimal('price', 15, 2); // Harga dasar / Harga mulai dari
+
             $table->text('description')->nullable();
             $table->integer('stock')->default(0);
-            $table->json('options')->nullable();
-            $table->json('sizes')->nullable();
-            $table->json('colors')->nullable();
+
+            // Kolom Varian
+            $table->json('options')->nullable(); // Pilihan umum (opsional)
+            $table->json('sizes')->nullable();   // List ukuran: ["S", "M"]
+            $table->json('colors')->nullable();  // List warna: ["Merah", "Biru"]
+
+            // KOLOM BARU: Menyimpan harga spesifik per varian
+            $table->json('variants_data')->nullable();
+
             $table->string('sku')->unique();
             $table->enum('status', ['active', 'draft', 'out_of_stock'])->default('active');
             $table->timestamps();

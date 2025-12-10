@@ -23,10 +23,48 @@
                     @php $subtotal = 0; @endphp
 
                     @foreach($carts as $cart)
+                        {{-- =================================================== --}}
+                        {{-- LOGIKA HITUNG HARGA VARIAN (DELTA CALCULATION) --}}
+                        {{-- =================================================== --}}
                         @php 
-                            $totalPrice = $cart->product->price * $cart->quantity;
-                            $subtotal += $totalPrice;
+                            $basePrice = $cart->product->price;
+                            $finalUnitPrice = $basePrice;
+                            
+                            // Ambil data varian JSON dari produk
+                            // Format di DB: [{"type":"size", "key":"XL", "price":150000}, ...]
+                            $variantsData = $cart->product->variants_data ?? []; 
+
+                            // 1. Cek Selisih Harga Option (Jika user memilih option)
+                            if ($cart->option) {
+                                // Cari data option yang sesuai di JSON
+                                $optData = collect($variantsData)->first(function($item) use ($cart) {
+                                    return isset($item['type']) && $item['type'] === 'option' && $item['key'] === $cart->option;
+                                });
+                                
+                                // Jika ketemu, hitung selisihnya (Harga Varian - Harga Dasar)
+                                if ($optData) {
+                                    $finalUnitPrice += ($optData['price'] - $basePrice);
+                                }
+                            }
+
+                            // 2. Cek Selisih Harga Size (Jika user memilih size)
+                            if ($cart->size) {
+                                $sizeData = collect($variantsData)->first(function($item) use ($cart) {
+                                    return isset($item['type']) && $item['type'] === 'size' && $item['key'] === $cart->size;
+                                });
+
+                                if ($sizeData) {
+                                    $finalUnitPrice += ($sizeData['price'] - $basePrice);
+                                }
+                            }
+
+                            // Hitung Total Baris ini
+                            $lineTotal = $finalUnitPrice * $cart->quantity;
+                            
+                            // Tambahkan ke Subtotal Global
+                            $subtotal += $lineTotal;
                         @endphp
+                        {{-- =================================================== --}}
 
                         <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 p-4 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-shadow relative group">
                             
@@ -59,6 +97,11 @@
                                     <p class="text-sm text-gray-500 mb-2">{{ $cart->product->category->name ?? 'Uncategorized' }}</p>
 
                                     <div class="flex flex-wrap gap-2 mb-3">
+                                        @if($cart->option)
+                                            <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                                                {{ $cart->option }}
+                                            </span>
+                                        @endif
                                         @if($cart->size)
                                             <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
                                                 Size: {{ $cart->size }}
@@ -69,13 +112,7 @@
                                                 Color: {{ $cart->color }}
                                             </span>
                                         @endif
-                                        @if($cart->option)
-                                            <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
-                                                Option: {{ $cart->option }}
-                                            </span>
-                                        @endif
                                     </div>
-
                                 </div>
 
                                 <div class="flex justify-between items-center mt-3 sm:mt-0">
@@ -90,7 +127,13 @@
                                             <button type="submit" class="w-8 h-full flex items-center justify-center text-gray-500 hover:bg-gray-100 rounded-r-lg transition-colors {{ $cart->quantity >= $cart->product->stock ? 'opacity-50 cursor-not-allowed' : '' }}" {{ $cart->quantity >= $cart->product->stock ? 'disabled' : '' }}>+</button>
                                         </form>
                                     </div>
-                                    <p class="text-lg font-bold text-black">Rp {{ number_format($cart->product->price * $cart->quantity, 0, ',', '.') }}</p>
+                                    
+                                    <div class="text-right">
+                                        <p class="text-lg font-bold text-black">Rp {{ number_format($lineTotal, 0, ',', '.') }}</p>
+                                        @if($cart->quantity > 1)
+                                            <p class="text-xs text-gray-400">@ {{ number_format($finalUnitPrice, 0, ',', '.') }} / item</p>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         </div>
