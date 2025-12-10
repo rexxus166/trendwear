@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CartController;
@@ -81,9 +82,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     })->name('admin.orders');
 
     // --- Module Customers ---
-    Route::get('/customers', function () {
-        return view('page.admin.pelanggan.index');
-    })->name('admin.customers');
+    Route::get('/customers', [CustomerController::class, 'index'])->name('admin.customers');
+    Route::post('/customers', [CustomerController::class, 'store'])->name('admin.customers.store'); // BARU
+    Route::put('/customers/{id}', [CustomerController::class, 'update'])->name('admin.customers.update'); // BARU
+    Route::delete('/customers/{id}', [CustomerController::class, 'destroy'])->name('admin.customers.destroy');
 
     // --- Module Analytics ---
     Route::get('/analytics', function () {
