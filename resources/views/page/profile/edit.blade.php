@@ -25,8 +25,8 @@
         </div>
 
         <div class="hidden lg:block mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">Account Overview</h1>
-            <p class="text-gray-500">Manage your personal info, orders, and security.</p>
+            <h1 class="text-3xl font-bold text-gray-900">Profil Saya</h1>
+            <p class="text-gray-500">Kelola informasi pribadi, pesanan, dan keamanan.</p>
         </div>
 
         <div class="px-5 pb-12 lg:px-0 pt-6">
@@ -63,7 +63,7 @@
             <div class="grid grid-cols-3 gap-3 lg:gap-6 mb-8 lg:mb-12">
                 <div class="p-4 lg:p-6 bg-gray-50 rounded-2xl text-center hover:bg-gray-100 transition-colors cursor-pointer border border-transparent hover:border-gray-200">
                     <p class="text-2xl lg:text-3xl font-bold mb-1 text-gray-900">12</p>
-                    <p class="text-xs lg:text-sm text-gray-500 font-medium uppercase tracking-wide">Orders</p>
+                    <p class="text-xs lg:text-sm text-gray-500 font-medium uppercase tracking-wide">Pesanan</p>
                 </div>
                 <div class="p-4 lg:p-6 bg-gray-50 rounded-2xl text-center hover:bg-gray-100 transition-colors cursor-pointer border border-transparent hover:border-gray-200">
                     <p class="text-2xl lg:text-3xl font-bold mb-1 text-gray-900">6</p>
@@ -71,7 +71,7 @@
                 </div>
                 <div class="p-4 lg:p-6 bg-gray-50 rounded-2xl text-center hover:bg-gray-100 transition-colors cursor-pointer border border-transparent hover:border-gray-200">
                     <p class="text-2xl lg:text-3xl font-bold mb-1 text-gray-900">8</p>
-                    <p class="text-xs lg:text-sm text-gray-500 font-medium uppercase tracking-wide">Reviews</p>
+                    <p class="text-xs lg:text-sm text-gray-500 font-medium uppercase tracking-wide">Review</p>
                 </div>
             </div>
 
@@ -84,8 +84,8 @@
                         </svg>
                     </div>
                     <div class="flex-1">
-                        <p class="font-bold text-gray-900 text-lg">My Orders</p>
-                        <p class="text-sm text-gray-500">Track current & past orders</p>
+                        <p class="font-bold text-gray-900 text-lg">Pesanan Saya</p>
+                        <p class="text-sm text-gray-500">Lacak pesanan</p>
                     </div>
                     <svg class="w-5 h-5 text-gray-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -100,8 +100,8 @@
                         </svg>
                     </div>
                     <div class="flex-1">
-                        <p class="font-bold text-gray-900 text-lg">Shipping Addresses</p>
-                        <p class="text-sm text-gray-500">Manage delivery locations</p>
+                        <p class="font-bold text-gray-900 text-lg">Alamat Tersimpan</p>
+                        <p class="text-sm text-gray-500">Kelola lokasi pengiriman</p>
                     </div>
                     <svg class="w-5 h-5 text-gray-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -115,8 +115,8 @@
                         </svg>
                     </div>
                     <div class="flex-1">
-                        <p class="font-bold text-gray-900 text-lg">Payment Methods</p>
-                        <p class="text-sm text-gray-500">Saved cards & wallets</p>
+                        <p class="font-bold text-gray-900 text-lg">Metode Pembayaran</p>
+                        <p class="text-sm text-gray-500">Metode pembayaran yang tersimpan</p>
                     </div>
                     <svg class="w-5 h-5 text-gray-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -131,8 +131,8 @@
                         </svg>
                     </div>
                     <div class="flex-1">
-                        <p class="font-bold text-gray-900 text-lg">Account Settings</p>
-                        <p class="text-sm text-gray-500">Password, security & preferences</p>
+                        <p class="font-bold text-gray-900 text-lg">Pengaturan Akun</p>
+                        <p class="text-sm text-gray-500">Password, keamanan & preferensi</p>
                     </div>
                     <svg class="w-5 h-5 text-gray-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
