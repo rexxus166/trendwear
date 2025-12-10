@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\AddressController;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,6 +44,12 @@ Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
     Route::patch('/cart/{id}', [CartController::class, 'update'])->name('cart.update'); // Update qty
     Route::delete('/cart/{id}', [CartController::class, 'destroy'])->name('cart.destroy'); // Hapus item
 
+    // MODULE ADDRESS
+    Route::get('/profile/address', [AddressController::class, 'index'])->name('address.index');
+    Route::post('/profile/address', [AddressController::class, 'store'])->name('address.store');
+    Route::put('/profile/address/{id}', [AddressController::class, 'update'])->name('address.update');
+    Route::delete('/profile/address/{id}', [AddressController::class, 'destroy'])->name('address.destroy');
+    Route::post('/profile/address/{id}/set-primary', [AddressController::class, 'setPrimary'])->name('address.setPrimary');
 });
 
 
