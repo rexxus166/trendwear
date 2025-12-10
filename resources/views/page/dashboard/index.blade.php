@@ -134,14 +134,6 @@
                                 </path>
                             </svg>
                         </button>
-
-                        <div
-                            class="absolute bottom-4 left-4 right-4 translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 hidden lg:block">
-                            <button
-                                class="w-full py-3 bg-white/95 backdrop-blur text-black font-bold rounded-xl hover:bg-black hover:text-white transition-colors shadow-lg">
-                                Add to Cart
-                            </button>
-                        </div>
                     </div>
 
                     <div>
@@ -169,18 +161,5 @@
 
         </div>
     </section>
-
-    {{-- <section class="mx-5 my-8 lg:mx-12 lg:my-16">
-        <div class="bg-gradient-to-br from-black to-gray-800 rounded-3xl p-8 lg:p-16 text-white relative overflow-hidden flex flex-col md:flex-row items-center justify-between shadow-2xl">
-            <div class="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -translate-y-32 translate-x-32 blur-3xl"></div>
-            <div class="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full translate-y-20 -translate-x-20 blur-2xl"></div>
-            <div class="relative z-10 max-w-xl text-center md:text-left">
-                <p class="text-white/70 text-sm lg:text-base mb-3 font-semibold tracking-widest uppercase">Limited Time Offer</p>
-                <h3 class="text-3xl lg:text-5xl font-bold mb-4 leading-tight">Get 30% Off Everything</h3>
-                <p class="text-white/80 text-sm lg:text-lg mb-8 leading-relaxed">Join the TrendWear community today. Use code <span class="text-white font-mono bg-white/20 px-2 py-1 rounded mx-1">FIRST30</span> at checkout.</p>
-                <button class="w-full md:w-auto px-10 py-4 bg-white text-black rounded-full text-base font-bold hover:bg-gray-100 transition-all hover:scale-105 shadow-lg active:scale-95">Claim Offer Now</button>
-            </div>
-        </div>
-    </section> --}}
 
 @endsection
