@@ -37,6 +37,9 @@ class ProductController extends Controller
             'category_id' => 'required|exists:categories,id',
             'price' => 'required|numeric',
             'stock' => 'required|integer',
+            'options' => 'nullable|string',
+            'sizes' => 'nullable|string',
+            'colors' => 'nullable|string',
             'sku' => 'required|string|unique:products,sku',
             'description' => 'nullable|string',
             // Validasi file (gambar/video), support jpg, png, webp, mp4, mov. Max 10MB.
@@ -44,6 +47,10 @@ class ProductController extends Controller
         ]);
 
         DB::transaction(function () use ($request) {
+            // Konversi String "S,M,L" menjadi Array ["S", "M", "L"]
+            $optionsArray = $request->options ? array_map('trim', explode(',', $request->options)) : [];
+            $sizesArray = $request->sizes ? array_map('trim', explode(',', $request->sizes)) : [];
+            $colorsArray = $request->colors ? array_map('trim', explode(',', $request->colors)) : [];
             // 2. Simpan Data Produk Utama
             $product = Product::create([
                 'name' => $request->name,
@@ -51,6 +58,9 @@ class ProductController extends Controller
                 'category_id' => $request->category_id,
                 'price' => $request->price,
                 'stock' => $request->stock,
+                'options' => $optionsArray,
+                'sizes' => $sizesArray,
+                'colors' => $colorsArray,
                 'sku' => $request->sku,
                 'description' => $request->description,
                 // Status otomatis: Jika stok > 0 maka active, jika 0 maka out_of_stock
@@ -90,7 +100,9 @@ class ProductController extends Controller
             'category_id' => 'required|exists:categories,id',
             'price' => 'required|numeric',
             'stock' => 'required|integer',
-            // Validasi SKU unik, TAPI kecualikan ID produk ini sendiri (agar tidak error jika tidak ganti SKU)
+            'options' => 'nullable|string',
+            'sizes' => 'nullable|string',
+            'colors' => 'nullable|string',
             'sku' => ['required', 'string', Rule::unique('products', 'sku')->ignore($product->id)],
             'description' => 'nullable|string',
             'status' => 'required|in:active,draft,out_of_stock', // Validasi status manual dari user
@@ -106,6 +118,9 @@ class ProductController extends Controller
                 'category_id' => $request->category_id,
                 'price' => $request->price,
                 'stock' => $request->stock,
+                'options' => $request->options,
+                'sizes' => $request->sizes,
+                'colors' => $request->colors,
                 'sku' => $request->sku,
                 'description' => $request->description,
                 'status' => $request->status, // Status diambil dari input form edit

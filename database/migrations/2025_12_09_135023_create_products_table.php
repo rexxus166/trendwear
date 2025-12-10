@@ -19,6 +19,9 @@ return new class extends Migration
             $table->decimal('price', 15, 2); // 15 digit, 2 desimal
             $table->text('description')->nullable();
             $table->integer('stock')->default(0);
+            $table->json('options')->nullable();
+            $table->json('sizes')->nullable();
+            $table->json('colors')->nullable();
             $table->string('sku')->unique();
             $table->enum('status', ['active', 'draft', 'out_of_stock'])->default('active');
             $table->timestamps();

@@ -10,6 +10,11 @@ class Product extends Model
     use HasFactory;
 
     protected $guarded = ['id'];
+    protected $casts = [
+        'options' => 'array',
+        'sizes' => 'array',
+        'colors' => 'array',
+    ];
 
     // Relasi: Produk milik satu kategori
     public function category()

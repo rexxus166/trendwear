@@ -30,36 +30,41 @@
             </a>
         </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-8">
+        <section class="px-5 py-8 lg:px-12 lg:py-16">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl lg:text-2xl font-bold tracking-tight">Shop by Category</h3>
+            <a href="{{ route('shop') }}" class="text-sm font-semibold text-gray-500 hover:text-black flex items-center gap-2 group transition-colors">
+                View All <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-black group-hover:text-white transition-colors"><svg class="w-3 h-3 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></div>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
             @forelse($categories as $category)
-                <a href="{{ route('category.show', $category->slug) }}" class="group relative h-48 lg:h-64 bg-gray-100 rounded-3xl overflow-hidden hover:shadow-lg transition-all text-left block">
+                <a href="{{ route('category.show', $category->slug) }}" class="group relative h-36 lg:h-48 bg-gray-100 rounded-2xl overflow-hidden hover:shadow-md transition-all text-left block">
                     
                     @if($category->image_path)
                         <img src="{{ asset('storage/' . $category->image_path) }}" alt="{{ $category->name }}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
                     @else
                         <div class="absolute inset-0 bg-gray-200 transition-colors group-hover:bg-gray-300"></div>
-                        <div class="absolute top-0 right-0 w-32 h-32 bg-white/30 rounded-full -translate-y-10 translate-x-10 transition-transform group-hover:scale-150 duration-700 blur-2xl"></div>
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-white/30 rounded-full -translate-y-8 translate-x-8 transition-transform group-hover:scale-150 duration-700 blur-xl"></div>
                     @endif
 
-                    
-                    <div class="absolute inset-0 p-6 flex flex-col justify-end z-10">
-                        <h4 class="text-xl font-bold mb-1 group-hover:translate-x-1 transition-transform text-white md:text-gray-900 md:group-hover:text-white {{ $category->image_path ? '!text-white' : '' }}">
+                    <div class="absolute inset-0 p-4 flex flex-col justify-end z-10">
+                        <h4 class="text-lg lg:text-xl font-bold mb-0.5 group-hover:translate-x-1 transition-transform text-gray-900 {{ $category->image_path ? '!text-white' : '' }}">
                             {{ $category->name }}
                         </h4>
-                        <p class="text-sm text-white/80 md:text-gray-500 md:group-hover:text-white/80 transition-transform delay-75 {{ $category->image_path ? '!text-white/80' : '' }}">
+                        <p class="text-xs text-gray-500 group-hover:translate-x-1 transition-transform delay-75 {{ $category->image_path ? '!text-white/80' : '' }}">
                             {{ $category->products_count }} items
                         </p>
                     </div>
                     
-                    <div class="absolute top-4 right-4 w-8 h-8 bg-white rounded-full flex items-center justify-center opacity-0 -translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-                        <svg class="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
-                        </svg>
+                    <div class="absolute top-3 right-3 w-6 h-6 bg-white/90 backdrop-blur rounded-full flex items-center justify-center opacity-0 -translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-sm">
+                        <svg class="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                     </div>
                 </a>
             @empty
-                <div class="col-span-full text-center text-gray-500 py-10">No categories found.</div>
+                <div class="col-span-full text-center text-gray-500 py-8 text-sm">No categories found.</div>
             @endforelse
         </div>
     </section>
