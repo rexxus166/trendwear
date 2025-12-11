@@ -169,13 +169,13 @@
                             <span class="text-lg font-bold">Total</span>
                             <span class="text-2xl font-bold">Rp {{ number_format($subtotal, 0, ',', '.') }}</span>
                         </div>
-                        <button
+                        <a href="{{ route('checkout.index') }}"
                             class="w-full py-4 bg-black text-white rounded-xl font-bold hover:bg-gray-800 transition-transform active:scale-95 shadow-xl flex items-center justify-center gap-2">
                             Checkout <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
                             </svg>
-                        </button>
+                        </a>
                     </div>
                 </div>
 
@@ -186,10 +186,10 @@
                             <span class="text-xl font-bold text-black">Rp
                                 {{ number_format($subtotal, 0, ',', '.') }}</span>
                         </div>
-                        <button
+                        <a href="{{ route('checkout.index') }}"
                             class="px-8 py-3 bg-red-500 text-white rounded-lg font-bold text-sm hover:bg-red-600 transition-colors shadow-lg active:scale-95 flex-1 max-w-[180px]">
                             Checkout
-                        </button>
+                        </a>
                     </div>
                 </div>
 

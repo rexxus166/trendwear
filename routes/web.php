@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\AddressController;
@@ -44,6 +45,9 @@ Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
     Route::post('/cart', [CartController::class, 'store'])->name('cart.store');       // Tambah item
     Route::patch('/cart/{id}', [CartController::class, 'update'])->name('cart.update'); // Update qty
     Route::delete('/cart/{id}', [CartController::class, 'destroy'])->name('cart.destroy'); // Hapus item
+
+    // Checkout
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
 
     // MODULE ADDRESS
     Route::get('/profile/address', [AddressController::class, 'index'])->name('address.index');
