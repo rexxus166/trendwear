@@ -11,10 +11,10 @@
         dt: new DataTransfer(),
 
         // Form Edit State
+        // UPDATE: Saya tambahkan field 'weight' disini
         editForm: {
-            id: null, name: '', category_id: '', price: '', stock: '', sku: '', description: '', status: '', actionUrl: '', existingImages: [],
+            id: null, name: '', category_id: '', price: '', stock: '', weight: '', sku: '', description: '', status: '', actionUrl: '', existingImages: [],
             options: [], sizes: [], colors: [],
-            // Pisahkan harga option dan size agar tidak bentrok
             variantPricesOptions: {}, 
             variantPricesSizes: {}
         },
@@ -71,6 +71,8 @@
             this.editForm.category_id = product.category_id;
             this.editForm.price = product.price;
             this.editForm.stock = product.stock;
+            // UPDATE: Masukkan data berat ke form edit
+            this.editForm.weight = product.weight; 
             this.editForm.sku = product.sku;
             this.editForm.description = product.description;
             this.editForm.status = product.status;
@@ -85,7 +87,7 @@
             let sizesData = product.sizes || [];
             let colorsData = product.colors || [];
             
-            // Populate Harga Varian (Mapping dari variants_data JSON)
+            // Populate Harga Varian
             this.editForm.variantPricesOptions = {};
             this.editForm.variantPricesSizes = {};
 
@@ -150,6 +152,7 @@
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase">Variants</th>
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
+                                <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase">Weight</th>
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                                 <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                             </tr>
@@ -177,6 +180,7 @@
                                 </td>
                                 <td class="px-6 py-4 text-sm font-semibold">Rp {{ number_format($product->price, 0, ',', '.') }}</td>
                                 <td class="px-6 py-4 text-sm">{{ $product->stock }}</td>
+                                <td class="px-6 py-4 text-sm">{{ $product->weight }}g</td>
                                 <td class="px-6 py-4">
                                     <span class="px-2 py-1 text-xs rounded-full font-medium {{ $product->status == 'active' ? 'bg-green-100 text-green-600' : ($product->status == 'draft' ? 'bg-gray-100 text-gray-600' : 'bg-red-100 text-red-600') }}">
                                         {{ ucfirst(str_replace('_', ' ', $product->status)) }}
@@ -190,7 +194,7 @@
                                 </td>
                             </tr>
                             @empty
-                            <tr><td colspan="7" class="px-6 py-8 text-center text-gray-500">No products found.</td></tr>
+                            <tr><td colspan="8" class="px-6 py-8 text-center text-gray-500">No products found.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -292,6 +296,14 @@
                             <div><label class="block text-sm font-medium mb-2">Base Price (IDR)</label><input type="number" name="price" required class="w-full px-4 py-3 bg-gray-50 border rounded-xl"></div>
                             <div class="md:col-span-2"><label class="block text-sm font-medium mb-2">Description</label><textarea name="description" rows="4" class="w-full px-4 py-3 bg-gray-50 border rounded-xl"></textarea></div>
                             <div><label class="block text-sm font-medium mb-2">Stock</label><input type="number" name="stock" required class="w-full px-4 py-3 bg-gray-50 border rounded-xl"></div>
+                            
+                            {{-- UPDATE: Input Berat untuk Add Product --}}
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Weight (Gram)</label>
+                                <input type="number" name="weight" placeholder="200" class="w-full px-4 py-3 bg-gray-50 border rounded-xl">
+                                <p class="text-[10px] text-gray-500 mt-1">Default 200g if empty.</p>
+                            </div>
+
                             <div><label class="block text-sm font-medium mb-2">SKU</label><input type="text" name="sku" required class="w-full px-4 py-3 bg-gray-50 border rounded-xl"></div>
                         </div>
                         <div class="flex gap-3 pt-4 border-t border-gray-100"><button type="button" @click="showProductModal = false" class="flex-1 px-6 py-3 border rounded-xl">Cancel</button><button type="submit" class="flex-1 px-6 py-3 bg-black text-white rounded-xl">Save Product</button></div>
@@ -401,8 +413,10 @@
 
                                 <div x-data="tagInput()" @set-edit-colors.window="tags = $event.detail">
                                     <label class="block text-sm font-medium mb-2">Colors</label>
-                                    <div class="flex flex-wrap gap-2 p-2 bg-white border rounded-xl">
-                                        <template x-for="(tag, index) in tags" :key="index"><span class="bg-black text-white text-xs font-semibold px-2 py-1 rounded flex items-center gap-1"><span x-text="tag"></span><button type="button" @click="removeTag(index)" class="text-white hover:text-gray-300">&times;</button></span></template>
+                                    <div class="flex flex-wrap gap-2 p-2 bg-white border rounded-xl focus-within:ring-2 focus-within:ring-black">
+                                        <template x-for="(tag, index) in tags" :key="index">
+                                            <span class="bg-black text-white text-xs font-semibold px-2 py-1 rounded flex items-center gap-1"><span x-text="tag"></span><button type="button" @click="removeTag(index)" class="text-white hover:text-gray-300">&times;</button></span>
+                                        </template>
                                         <input type="text" x-model="newTag" @keydown.enter.prevent="addTag()" @keydown.comma.prevent="addTag()" class="flex-1 outline-none text-sm bg-transparent min-w-[60px]">
                                     </div>
                                     <input type="hidden" name="colors" :value="valueString">
@@ -416,6 +430,13 @@
                             <div><label class="block text-sm font-medium mb-2">Base Price (IDR)</label><input type="number" name="price" x-model="editForm.price" required class="w-full px-4 py-3 bg-gray-50 border rounded-xl"></div>
                             <div class="md:col-span-2"><label class="block text-sm font-medium mb-2">Description</label><textarea name="description" x-model="editForm.description" rows="4" class="w-full px-4 py-3 bg-gray-50 border rounded-xl"></textarea></div>
                             <div><label class="block text-sm font-medium mb-2">Stock</label><input type="number" name="stock" x-model="editForm.stock" required class="w-full px-4 py-3 bg-gray-50 border rounded-xl"></div>
+                            
+                            {{-- UPDATE: Input Berat untuk Edit Product --}}
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Weight (Gram)</label>
+                                <input type="number" name="weight" x-model="editForm.weight" class="w-full px-4 py-3 bg-gray-50 border rounded-xl">
+                            </div>
+
                             <div><label class="block text-sm font-medium mb-2">SKU</label><input type="text" name="sku" x-model="editForm.sku" required class="w-full px-4 py-3 bg-gray-50 border rounded-xl"></div>
                         </div>
 

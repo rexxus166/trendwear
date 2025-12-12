@@ -86,7 +86,7 @@
                 <p class="text-gray-500 mb-6 text-lg leading-relaxed">
                     Designed for the city life. Our newest collection brings comfort and style together. Minimalism meets functionality in every stitch.
                 </p>
-                <a href="login.html" class="inline-flex items-center gap-2 font-semibold border-b border-black pb-1 hover:text-gray-600 transition-colors">
+                <a href="{{ route('login') }}" class="inline-flex items-center gap-2 font-semibold border-b border-black pb-1 hover:text-gray-600 transition-colors">
                     Shop The Collection 
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
                 </a>
@@ -99,7 +99,7 @@
                 <p class="text-gray-500 mb-6 text-lg leading-relaxed">
                     Don't miss out on our limited edition releases. Once they're gone, they're gone. Sign up now to get early access.
                 </p>
-                <a href="register.html" class="inline-flex items-center gap-2 font-semibold border-b border-black pb-1 hover:text-gray-600 transition-colors">
+                <a href="{{ route('register') }}" class="inline-flex items-center gap-2 font-semibold border-b border-black pb-1 hover:text-gray-600 transition-colors">
                     Get Early Access
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
                 </a>
@@ -120,8 +120,8 @@
             <h2 class="text-3xl lg:text-5xl font-bold mb-6">Ready to upgrade your look?</h2>
             <p class="text-gray-600 mb-8 text-lg">Join 10,000+ others who have redefined their style with TrendWear.</p>
             <div class="flex flex-col sm:flex-row justify-center gap-4">
-                <a href="register.html" class="px-10 py-4 bg-black text-white rounded-full font-bold hover:scale-105 transition-transform shadow-lg">Create Account</a>
-                <a href="login.html" class="px-10 py-4 bg-white text-black border border-gray-200 rounded-full font-bold hover:bg-gray-50 transition-colors">Log In</a>
+                <a href="{{ route('register') }}" class="px-10 py-4 bg-black text-white rounded-full font-bold hover:scale-105 transition-transform shadow-lg">Create Account</a>
+                <a href="{{ route('login') }}" class="px-10 py-4 bg-white text-black border border-gray-200 rounded-full font-bold hover:bg-gray-50 transition-colors">Log In</a>
             </div>
         </div>
     </section>
