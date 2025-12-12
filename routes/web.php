@@ -1,10 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\CategoryController;
@@ -103,13 +105,33 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 });
 
 
-// ==========================================
-// PROFIL USER (Breeze Default)
-// ==========================================
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+// Shipping Routes
+Route::prefix('shipping')->group(function () {
+    Route::get('/provinces', [ShippingController::class, 'getProvince']);
+    Route::get('/cities', [ShippingController::class, 'getCity']);
+    Route::get('/districts', [ShippingController::class, 'getDistrict']);
+    Route::post('/check-cost', [ShippingController::class, 'checkCost'])->name('shipping.check');
+    Route::get('/services', [ShippingController::class, 'getServices']);
+});
+
+Route::get('/cari-lokasi-toko/{kecamatan}', function ($kecamatan) {
+    $apiKey = env('RAJAONGKIR_API_KEY');
+    $baseUrl = 'https://rajaongkir.komerce.id/api/v1';
+
+    $response = Http::withoutVerifying()->withHeaders([
+        'key' => $apiKey
+    ])->get("{$baseUrl}/destination/domestic-destination", [
+        'search' => $kecamatan,
+        'limit' => 5
+    ]);
+
+    return $response->json();
 });
 
 require __DIR__ . '/auth.php';

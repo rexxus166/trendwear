@@ -10,31 +10,32 @@ use Illuminate\Support\Facades\Auth;
 class CheckoutController extends Controller
 {
     /**
-     * Menampilkan halaman checkout.
+     * Menampilkan halaman checkout dengan kalkulasi harga & berat.
      */
     public function index()
     {
-        // 1. Ambil Keranjang User beserta relasi produk dan gambarnya
+        // 1. Ambil Keranjang User
+        // Menggunakan eager loading (with) untuk performa query yang lebih baik
         $carts = Cart::with(['product.images'])->where('user_id', Auth::id())->get();
 
-        // Jika keranjang kosong, lempar balik ke halaman keranjang
+        // Jika keranjang kosong, tendang balik ke halaman keranjang
         if ($carts->isEmpty()) {
-            return redirect()->route('cart.index');
+            return redirect()->route('cart.index')->with('error', 'Keranjang belanja Anda kosong.');
         }
 
         // 2. Ambil Data Alamat
-        // Ambil SEMUA alamat untuk modal ganti alamat, urutkan primary paling atas
+        // Ambil SEMUA alamat user untuk ditampilkan di Modal Ganti Alamat
         $allAddresses = UserAddress::where('user_id', Auth::id())
-            ->orderBy('is_primary', 'desc')
+            ->orderBy('is_primary', 'desc') // Alamat utama paling atas
             ->latest()
             ->get();
 
-        // Tentukan alamat yang aktif saat ini (Default: Primary, kalau gak ada ambil yang pertama)
+        // Tentukan alamat aktif saat ini (Default: Primary, jika tidak ada ambil yang pertama)
         $currentAddress = $allAddresses->firstWhere('is_primary', true) ?? $allAddresses->first();
 
-        // 3. Hitung Subtotal (Server Side Calculation)
-        // Kita ulangi logika "Delta Calculation" di sini untuk keamanan data
+        // 3. Kalkulasi Subtotal & Total Berat
         $subtotal = 0;
+        $totalWeight = 0; // Dalam gram
 
         foreach ($carts as $cart) {
             $basePrice = $cart->product->price;
@@ -48,7 +49,7 @@ class CheckoutController extends Controller
                     return isset($item['type']) && $item['type'] === 'option' && $item['key'] === $cart->option;
                 });
 
-                // Jika ketemu, tambahkan selisihnya (Harga Varian - Harga Dasar)
+                // Jika ketemu, tambahkan selisihnya
                 if ($optData) {
                     $finalUnitPrice += ($optData['price'] - $basePrice);
                 }
@@ -65,16 +66,21 @@ class CheckoutController extends Controller
                 }
             }
 
-            // Simpan harga final sementara ke object cart (agar bisa dipakai di View)
+            // Simpan harga final sementara ke object cart (agar bisa ditampilkan di View)
             $cart->final_price = $finalUnitPrice;
 
-            // Tambahkan ke total perhitungan
+            // Tambahkan ke Total Harga
             $subtotal += ($finalUnitPrice * $cart->quantity);
+
+            // Tambahkan ke Total Berat
+            // Jika berat produk kosong/null, kita default ke 1000 gram (1 kg)
+            $itemWeight = $cart->product->weight ?? 1000;
+            $totalWeight += ($itemWeight * $cart->quantity);
         }
 
-        // 4. Hitung Biaya Lain-lain
-        $shippingCost = 0; // Nanti bisa diintegrasikan dengan API RajaOngkir
-        $tax = 0;
+        // 4. Inisialisasi Biaya Lain
+        $shippingCost = 0; // Nanti diupdate via Ajax (RajaOngkir) di Frontend
+        $tax = 0; // Pajak (jika ada)
 
         $grandTotal = $subtotal + $shippingCost + $tax;
 
@@ -84,7 +90,8 @@ class CheckoutController extends Controller
             'currentAddress',
             'subtotal',
             'shippingCost',
-            'grandTotal'
+            'grandTotal',
+            'totalWeight' // Penting untuk dikirim ke API Ongkir
         ));
     }
 }

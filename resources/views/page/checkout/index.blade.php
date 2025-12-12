@@ -12,19 +12,7 @@
     </div>
 
     <div class="px-5 py-8 lg:px-12 max-w-7xl mx-auto min-h-[80vh] pt-24 lg:pt-12 pb-32 lg:pb-12"
-         x-data="{
-            showAddressModal: false,
-            // Data Alamat yang sedang dipilih (Default dari Controller)
-            activeAddress: {{ $currentAddress ? json_encode($currentAddress) : 'null' }},
-            // Semua Data Alamat User
-            allAddresses: {{ json_encode($allAddresses) }},
-            
-            // Fungsi Ganti Alamat
-            selectAddress(address) {
-                this.activeAddress = address;
-                this.showAddressModal = false;
-            }
-         }">
+         x-data="checkoutData">
         
         <h1 class="text-3xl font-bold mb-8 hidden lg:block">Checkout</h1>
 
@@ -32,6 +20,9 @@
             @csrf
             
             <input type="hidden" name="address_id" :value="activeAddress ? activeAddress.id : ''">
+            <input type="hidden" name="shipping_service" x-model="selectedService">
+            <input type="hidden" name="shipping_cost" x-model="shippingCost">
+            <input type="hidden" name="courier" x-model="selectedCourier">
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 relative">
                 
@@ -51,24 +42,16 @@
                         <template x-if="activeAddress">
                             <div class="space-y-1 text-sm sm:text-base cursor-pointer hover:opacity-70 transition-opacity" @click="showAddressModal = true">
                                 <div class="flex items-center gap-2 mb-2">
-                                    <span class="font-bold text-gray-900" x-text="activeAddress.recipient_name"></span>
+                                    <span class="font-bold text-gray-900" x-text="activeAddress.recipient_name || activeAddress.name"></span>
                                     <span class="text-gray-400">|</span>
-                                    <span class="text-gray-600" x-text="activeAddress.phone_number"></span>
-                                    <span class="px-2 py-0.5 bg-gray-100 text-xs font-bold rounded text-gray-600 border border-gray-200" x-text="activeAddress.label"></span>
+                                    <span class="text-gray-600" x-text="activeAddress.phone_number || activeAddress.phone"></span>
+                                    <span class="px-2 py-0.5 bg-gray-100 text-xs font-bold rounded text-gray-600 border border-gray-200" 
+                                          x-text="activeAddress.label || (activeAddress.is_primary ? 'Utama' : 'Lainnya')"></span>
                                 </div>
-                                <p class="text-gray-600" x-text="activeAddress.address_line1"></p>
+                                <p class="text-gray-600" x-text="activeAddress.address_line1 || activeAddress.address"></p>
                                 <p class="text-gray-600">
-                                    <span x-text="activeAddress.village"></span>, 
-                                    <span x-text="activeAddress.district"></span>
+                                    <span x-text="[activeAddress.village, activeAddress.district, activeAddress.city, activeAddress.province, activeAddress.postal_code].filter(Boolean).join(', ')"></span>
                                 </p>
-                                <p class="text-gray-600">
-                                    <span x-text="activeAddress.city"></span>, 
-                                    <span x-text="activeAddress.province"></span> 
-                                    <span x-text="activeAddress.postal_code"></span>
-                                </p>
-                                <template x-if="activeAddress.address_line2">
-                                    <p class="text-gray-400 italic text-xs mt-1">Note: <span x-text="activeAddress.address_line2"></span></p>
-                                </template>
                             </div>
                         </template>
 
@@ -106,8 +89,8 @@
                                             @if($cart->color) <span class="px-1.5 py-0.5 bg-gray-100 text-gray-600 text-[10px] rounded border border-gray-200">{{ $cart->color }}</span> @endif
                                         </div>
                                         <div class="flex justify-between items-end">
-                                            <p class="text-xs text-gray-500">{{ $cart->quantity }}x Barang</p>
-                                            <p class="text-sm font-bold text-black">Rp {{ number_format($cart->final_price * $cart->quantity, 0, ',', '.') }}</p>
+                                            <p class="text-xs text-gray-500">{{ $cart->quantity }}x Barang (@ {{ $cart->product->weight ?? 1000 }}g)</p>
+                                            <p class="text-sm font-bold text-black">Rp {{ number_format(($cart->final_price ?? 0) * ($cart->quantity ?? 1), 0, ',', '.') }}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -115,17 +98,61 @@
                         </div>
                     </section>
 
-                    <section class="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 shadow-sm opacity-50 cursor-not-allowed relative">
-                        <div class="absolute inset-0 z-10"></div>
-                        <div class="flex justify-between items-center mb-2">
+                    <section class="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
                             <h2 class="text-lg font-bold">Metode Pengiriman</h2>
-                            <span class="text-xs font-bold bg-gray-100 px-2 py-1 rounded text-gray-500">Coming Soon</span>
+                            <div x-show="isLoading" class="text-xs font-medium text-gray-500 flex items-center gap-1" style="display: none;">
+                                <svg class="animate-spin h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                Cek Ongkir...
+                            </div>
                         </div>
-                        <div class="flex items-center justify-between p-4 border border-gray-200 rounded-xl bg-gray-50">
-                            <div><p class="font-bold text-gray-800">Reguler (JNE / J&T)</p><p class="text-xs text-gray-500">Estimasi tiba 2-3 hari</p></div>
-                            <p class="font-bold text-gray-900">Rp {{ number_format($shippingCost, 0, ',', '.') }}</p>
+
+                        <div class="flex gap-3 mb-4">
+                            <template x-for="courier in ['jne', 'pos', 'tiki']">
+                                <button type="button" 
+                                        @click="checkShipping(courier)"
+                                        :class="selectedCourier === courier ? 'bg-black text-white border-black' : 'bg-white text-gray-600 border-gray-200 hover:border-black'"
+                                        class="flex-1 py-2 rounded-xl border font-bold text-sm uppercase transition-all"
+                                        x-text="courier"
+                                        :disabled="!activeAddress || isLoading"></button>
+                            </template>
+                        </div>
+
+                        <div class="space-y-3">
+                            <template x-if="shippingResults.length === 0 && !isLoading && selectedCourier">
+                                <p class="text-sm text-center text-red-500 py-4 bg-red-50 rounded-xl">
+                                    <span x-text="'Layanan ' + selectedCourier.toUpperCase() + ' tidak ditemukan untuk rute ini.'"></span>
+                                </p>
+                            </template>
+
+                            <template x-if="isLoading">
+                                <div class="text-center py-8">
+                                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+                                    <p class="mt-2 text-sm text-gray-500">Sedang mengecek ongkir...</p>
+                                </div>
+                            </template>
+
+                            <template x-for="service in shippingResults" :key="service.service">
+                                <label class="flex items-center justify-between p-4 border rounded-xl cursor-pointer hover:border-black transition-all"
+                                       :class="selectedService === service.service ? 'border-black ring-1 ring-black bg-gray-50' : 'border-gray-200'">
+                                    
+                                    <div class="flex items-center gap-3">
+                                        <input type="radio" name="shipping_option" 
+                                               :value="service.service" 
+                                               @click="selectService(service)"
+                                               class="w-4 h-4 text-black border-gray-300 focus:ring-black">
+                                        <div>
+                                            <p class="font-bold text-gray-900" x-text="service.service"></p>
+                                            <p class="text-xs text-gray-500">Estimasi <span x-text="service.cost[0].etd"></span> hari</p>
+                                            <p class="text-xs text-gray-400" x-text="service.description || ''"></p>
+                                        </div>
+                                    </div>
+                                    <p class="font-bold text-gray-900" x-text="formatRupiah(service.cost[0].value)"></p>
+                                </label>
+                            </template>
                         </div>
                     </section>
+
                 </div>
 
                 <div class="lg:col-span-1">
@@ -133,25 +160,41 @@
                         <h2 class="text-lg font-bold mb-6">Rincian Pembayaran</h2>
                         
                         <div class="space-y-3 text-sm lg:mb-6 lg:pb-6 lg:border-b lg:border-gray-100">
-                            <div class="flex justify-between text-gray-600"><span>Subtotal</span><span>Rp {{ number_format($subtotal, 0, ',', '.') }}</span></div>
-                            <div class="flex justify-between text-gray-600"><span>Ongkos Kirim</span><span>Rp {{ number_format($shippingCost, 0, ',', '.') }}</span></div>
-                            <div class="flex justify-between text-gray-600"><span>Biaya Layanan</span><span>Rp 0</span></div>
+                            <div class="flex justify-between text-gray-600">
+                                <span>Subtotal</span>
+                                <span x-text="formatRupiah(subtotal)"></span>
+                            </div>
+                            <div class="flex justify-between text-gray-600">
+                                <span>Ongkos Kirim</span>
+                                <span x-text="formatRupiah(shippingCost)"></span>
+                            </div>
+                            <div class="flex justify-between text-gray-600">
+                                <span>Biaya Layanan</span>
+                                <span>Rp 0</span>
+                            </div>
                         </div>
 
                         <div class="hidden lg:block">
                             <div class="flex justify-between items-center mb-8">
                                 <span class="text-lg font-bold text-gray-900">Total Pembayaran</span>
-                                <span class="text-xl font-bold text-black">Rp {{ number_format($grandTotal, 0, ',', '.') }}</span>
+                                <span class="text-xl font-bold text-black" x-text="formatRupiah(grandTotal)"></span>
                             </div>
 
-                            <button type="submit" class="w-full py-4 bg-black text-white rounded-xl font-bold hover:bg-gray-800 transition-all shadow-xl flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    :disabled="!activeAddress">
+                            <button type="submit" 
+                                    class="w-full py-4 bg-black text-white rounded-xl font-bold hover:bg-gray-800 transition-all shadow-xl flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    :disabled="!activeAddress || !selectedService || isLoading">
                                 Buat Pesanan
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                             </button>
                             
                             <template x-if="!activeAddress">
                                 <p class="text-xs text-red-500 text-center mt-3">* Mohon pilih alamat pengiriman.</p>
+                            </template>
+                            <template x-if="activeAddress && !selectedService && selectedCourier">
+                                <p class="text-xs text-red-500 text-center mt-3">* Pilih layanan pengiriman.</p>
+                            </template>
+                            <template x-if="activeAddress && !selectedCourier">
+                                <p class="text-xs text-red-500 text-center mt-3">* Pilih kurir pengiriman.</p>
                             </template>
 
                             <div class="mt-6 flex items-center justify-center gap-2 text-xs text-gray-400">
@@ -168,10 +211,11 @@
                 <div class="flex items-center justify-between gap-4">
                     <div class="flex flex-col">
                         <span class="text-xs text-gray-500">Total Pembayaran</span>
-                        <span class="text-lg font-bold text-black">Rp {{ number_format($grandTotal, 0, ',', '.') }}</span>
+                        <span class="text-lg font-bold text-black" x-text="formatRupiah(grandTotal)"></span>
                     </div>
-                    <button type="submit" class="px-6 py-3 bg-black text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-colors shadow-lg active:scale-95 flex-1 max-w-[200px] disabled:opacity-50"
-                            :disabled="!activeAddress">
+                    <button type="submit" 
+                            class="px-6 py-3 bg-black text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-colors shadow-lg active:scale-95 flex-1 max-w-[200px] disabled:opacity-50"
+                            :disabled="!activeAddress || !selectedService || isLoading">
                         Buat Pesanan
                     </button>
                 </div>
@@ -186,7 +230,11 @@
                     
                     <div class="bg-white px-4 pb-4 pt-5 sm:p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 z-10">
                         <h3 class="text-lg font-bold text-gray-900">Pilih Alamat Pengiriman</h3>
-                        <button @click="showAddressModal = false" class="text-gray-400 hover:text-gray-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                        <button type="button" @click="showAddressModal = false" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
                     </div>
 
                     <div class="p-4 sm:p-6 max-h-[60vh] overflow-y-auto space-y-4">
@@ -197,30 +245,37 @@
                                 
                                 <div class="flex justify-between items-start mb-1">
                                     <div class="flex items-center gap-2">
-                                        <span class="font-bold text-gray-900" x-text="addr.label"></span>
+                                        <span class="font-bold text-gray-900" x-text="addr.label || (addr.is_primary ? 'Alamat Utama' : 'Alamat')"></span>
                                         <template x-if="addr.is_primary">
                                             <span class="bg-black text-white text-[10px] px-2 py-0.5 rounded font-bold uppercase">Utama</span>
                                         </template>
                                     </div>
+                                    
                                     <template x-if="activeAddress && activeAddress.id === addr.id">
-                                        <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                        <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
                                     </template>
                                 </div>
 
                                 <div class="text-sm text-gray-600 space-y-0.5">
                                     <p class="font-medium text-gray-900">
-                                        <span x-text="addr.recipient_name"></span> 
-                                        <span class="text-gray-400 font-normal">| <span x-text="addr.phone_number"></span></span>
+                                        <span x-text="addr.recipient_name || addr.name"></span> 
+                                        <span class="text-gray-400 font-normal">| <span x-text="addr.phone_number || addr.phone"></span></span>
                                     </p>
-                                    <p x-text="addr.address_line1"></p>
-                                    <p><span x-text="addr.village"></span>, <span x-text="addr.district"></span></p>
-                                    <p><span x-text="addr.city"></span>, <span x-text="addr.province"></span> <span x-text="addr.postal_code"></span></p>
+                                    <p x-text="addr.address_line1 || addr.address"></p>
+                                    
+                                    <p>
+                                        <span x-text="[addr.village, addr.district, addr.city, addr.province, addr.postal_code].filter(Boolean).join(', ')"></span>
+                                    </p>
                                 </div>
                             </div>
                         </template>
 
                         <a href="{{ route('address.index') }}" class="flex items-center justify-center gap-2 w-full py-3 border border-dashed border-gray-300 rounded-xl text-gray-500 hover:text-black hover:border-black transition-colors font-medium text-sm">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
                             Tambah Alamat Baru
                         </a>
                     </div>
@@ -230,4 +285,123 @@
         </div>
 
     </div>
+
+    <script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('checkoutData', () => ({
+            showAddressModal: false,
+            activeAddress: @json($currentAddress ?? null),
+            allAddresses: @json($allAddresses ?? []),
+            subtotal: {{ $subtotal ?? 0 }},
+            shippingCost: 0,
+            totalWeight: {{ $totalWeight ?? 1000 }},
+            selectedCourier: '',
+            shippingResults: [],
+            selectedService: '',
+            isLoading: false,
+            // Variabel CACHE Frontend
+            shippingCache: {},
+
+            init() {
+                if (!this.activeAddress && this.allAddresses.length > 0) {
+                    const primary = this.allAddresses.find(a => a.is_primary);
+                    this.activeAddress = primary || this.allAddresses[0];
+                }
+            },
+
+            get grandTotal() {
+                return parseInt(this.subtotal) + parseInt(this.shippingCost);
+            },
+
+            selectAddress(address) {
+                this.activeAddress = address;
+                this.showAddressModal = false;
+                this.selectedCourier = '';
+                this.shippingResults = [];
+                this.selectedService = '';
+                this.shippingCost = 0;
+                // Reset Cache saat ganti alamat
+                this.shippingCache = {};
+            },
+
+            async checkShipping(courier) {
+                if (!this.activeAddress || !this.activeAddress.id) {
+                    alert('Pilih alamat pengiriman terlebih dahulu!');
+                    return;
+                }
+                
+                this.selectedCourier = courier;
+                this.selectedService = '';
+                this.shippingCost = 0;
+
+                // --- CEK CACHE DULU ---
+                if (this.shippingCache[courier]) {
+                    this.shippingResults = this.shippingCache[courier];
+                    return; // Stop, tidak perlu request API
+                }
+
+                this.shippingResults = [];
+                this.isLoading = true;
+
+                try {
+                    const response = await fetch('{{ route("shipping.check") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            address_id: this.activeAddress.id,
+                            courier: courier,
+                            weight: this.totalWeight
+                        })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Terjadi kesalahan pada server');
+                    }
+
+                    if (data.rajaongkir && data.rajaongkir.results && data.rajaongkir.results.length > 0) {
+                        this.shippingResults = data.rajaongkir.results[0].costs || [];
+                        
+                        // --- SIMPAN KE CACHE ---
+                        if (this.shippingResults.length > 0) {
+                            this.shippingCache[courier] = this.shippingResults;
+                        }
+
+                        if (this.shippingResults.length === 0) {
+                            alert(`Layanan ${courier.toUpperCase()} tidak tersedia.`);
+                        }
+                    } else {
+                        alert(data.error || 'Layanan tidak ditemukan.');
+                    }
+
+                } catch (error) {
+                    console.error(error);
+                    alert(error.message);
+                    this.selectedCourier = '';
+                } finally {
+                    this.isLoading = false;
+                }
+            },
+
+            selectService(service) {
+                this.selectedService = service.service;
+                this.shippingCost = service.cost[0].value;
+            },
+
+            formatRupiah(number) {
+                return new Intl.NumberFormat('id-ID', { 
+                    style: 'currency', 
+                    currency: 'IDR', 
+                    minimumFractionDigits: 0, 
+                    maximumFractionDigits: 0 
+                }).format(number);
+            }
+        }));
+    });
+    </script>
 @endsection

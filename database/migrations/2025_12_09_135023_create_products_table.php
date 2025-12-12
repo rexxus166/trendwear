@@ -21,6 +21,7 @@ return new class extends Migration
 
             $table->text('description')->nullable();
             $table->integer('stock')->default(0);
+            $table->integer('weight')->default(1000);
 
             // Kolom Varian
             $table->json('options')->nullable(); // Pilihan umum (opsional)
