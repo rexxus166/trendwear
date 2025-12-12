@@ -8,7 +8,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\AddressController;
 
@@ -67,9 +69,7 @@ Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
 
     // --- Dashboard ---
-    Route::get('/dashboard', function () {
-        return view('page.admin.dashboard.index');
-    })->name('admin.dashboard');
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
 
     // --- Module Products (CRUD) ---
     Route::get('/products', [ProductController::class, 'index'])->name('admin.products');
@@ -84,9 +84,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
     Route::post('/categories', [CategoryController::class, 'store'])->name('admin.categories.store');
 
     // --- Module Orders ---
-    Route::get('/orders', function () {
-        return view('page.admin.pesanan.index');
-    })->name('admin.orders');
+    Route::get('/orders', [OrderController::class, 'index'])->name('admin.orders');
+    Route::patch('/orders/{id}/status', [OrderController::class, 'updateStatus'])->name('admin.orders.updateStatus');
+    Route::get('/orders/{id}', [OrderController::class, 'show'])->name('admin.orders.show');
 
     // --- Module Customers ---
     Route::get('/customers', [CustomerController::class, 'index'])->name('admin.customers');
