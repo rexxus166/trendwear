@@ -16,7 +16,7 @@
         
         <h1 class="text-3xl font-bold mb-8 hidden lg:block">Checkout</h1>
 
-        <form action="#" method="POST"> 
+        <form @submit.prevent="processPayment"> 
             @csrf
             
             <input type="hidden" name="address_id" :value="activeAddress ? activeAddress.id : ''">
@@ -286,6 +286,8 @@
 
     </div>
 
+    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ env('MIDTRANS_CLIENT_KEY') }}"></script>
+
     <script>
     document.addEventListener('alpine:init', () => {
         Alpine.data('checkoutData', () => ({
@@ -383,6 +385,71 @@
                     console.error(error);
                     alert(error.message);
                     this.selectedCourier = '';
+                } finally {
+                    this.isLoading = false;
+                }
+            },
+
+            // --- FUNGSI BAYAR MIDTRANS ---
+            async processPayment() {
+                if (!this.activeAddress || !this.activeAddress.id) {
+                    alert('Mohon pilih alamat pengiriman.');
+                    return;
+                }
+                if (!this.selectedService) {
+                    alert('Mohon pilih layanan pengiriman.');
+                    return;
+                }
+
+                this.isLoading = true;
+
+                try {
+                    // Minta Snap Token ke Backend
+                    const response = await fetch('{{ route("checkout.process") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            address_id: this.activeAddress.id,
+                            courier: this.selectedCourier,
+                            shipping_service: this.selectedService,
+                            shipping_cost: this.shippingCost
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (!data.success) {
+                        throw new Error(data.error || 'Gagal memproses pesanan.');
+                    }
+
+                    // Munculkan Pop-up Midtrans Snap
+                    window.snap.pay(data.snap_token, {
+                        onSuccess: function(result){
+                            console.log('Success:', result);
+                            alert("Pembayaran Berhasil!");
+                            window.location.href = "/cart"; // Nanti ganti ke halaman order history
+                        },
+                        onPending: function(result){
+                            console.log('Pending:', result);
+                            alert("Menunggu Pembayaran!");
+                            window.location.href = "/cart";
+                        },
+                        onError: function(result){
+                            console.log('Error:', result);
+                            alert("Pembayaran Gagal!");
+                        },
+                        onClose: function(){
+                            alert('Anda menutup pop-up pembayaran.');
+                        }
+                    });
+
+                } catch (error) {
+                    console.error(error);
+                    alert(error.message);
                 } finally {
                     this.isLoading = false;
                 }

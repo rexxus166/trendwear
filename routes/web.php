@@ -50,6 +50,7 @@ Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
 
     // Checkout
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
 
     // MODULE ADDRESS
     Route::get('/profile/address', [AddressController::class, 'index'])->name('address.index');
