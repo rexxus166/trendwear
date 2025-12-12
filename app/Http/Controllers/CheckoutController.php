@@ -115,37 +115,81 @@ class CheckoutController extends Controller
 
         try {
             $user = Auth::user();
+            // Ambil keranjang beserta data produk
             $carts = Cart::with('product')->where('user_id', $user->id)->get();
 
             if ($carts->isEmpty()) {
                 return response()->json(['success' => false, 'error' => 'Keranjang kosong'], 400);
             }
 
-            // 2. Ambil Data Alamat Lengkap (Snapshot)
-            // Kita simpan teks aslinya, biar kalau user edit alamat di profil, history order gak berubah.
+            // 2. Snapshot Alamat
             $address = UserAddress::find($request->address_id);
             $fullAddress = "{$address->address_line1}, {$address->district}, {$address->city}, {$address->province}";
 
-            // 3. Hitung Total & Siapkan Item Details Midtrans
+            // 3. HITUNG ULANG TOTAL & ITEM DETAILS (DENGAN VARIAN)
             $itemsTotal = 0;
             $item_details = [];
 
             foreach ($carts as $cart) {
-                $price = $cart->final_price ?? $cart->product->price;
-                $itemsTotal += ($price * $cart->quantity);
+                // --- LOGIKA HITUNG HARGA VARIAN (Copy dari method index) ---
+                $basePrice = $cart->product->price;
+                $finalUnitPrice = $basePrice;
 
+                // Pastikan variants_data berupa Array (Decode jika perlu)
+                $variantsData = $cart->product->variants_data;
+                if (is_string($variantsData)) {
+                    $variantsData = json_decode($variantsData, true);
+                }
+                $variantsData = $variantsData ?? [];
+
+                // A. Cek Option
+                if ($cart->option) {
+                    $optData = collect($variantsData)->first(function ($item) use ($cart) {
+                        return isset($item['type']) && $item['type'] === 'option' && $item['key'] === $cart->option;
+                    });
+                    if ($optData) {
+                        $finalUnitPrice += ($optData['price'] - $basePrice);
+                    }
+                }
+
+                // B. Cek Size
+                if ($cart->size) {
+                    $sizeData = collect($variantsData)->first(function ($item) use ($cart) {
+                        return isset($item['type']) && $item['type'] === 'size' && $item['key'] === $cart->size;
+                    });
+                    if ($sizeData) {
+                        $finalUnitPrice += ($sizeData['price'] - $basePrice);
+                    }
+                }
+                // -----------------------------------------------------------
+
+                // Hitung Subtotal Item ini
+                $lineTotal = $finalUnitPrice * $cart->quantity;
+                $itemsTotal += $lineTotal;
+
+                // Buat Nama Produk + Varian untuk Midtrans (Biar jelas di struk)
+                $productName = $cart->product->name;
+                $variantLabel = [];
+                if ($cart->size) $variantLabel[] = $cart->size;
+                if ($cart->option) $variantLabel[] = $cart->option;
+
+                if (!empty($variantLabel)) {
+                    $productName .= " (" . implode(', ', $variantLabel) . ")";
+                }
+
+                // Masukkan ke Item Details Midtrans
                 $item_details[] = [
-                    'id' => $cart->product_id,
-                    'price' => (int) $price,
+                    'id' => $cart->product_id, // Atau SKU
+                    'price' => (int) $finalUnitPrice, // HARGA YANG SUDAH DITAMBAH VARIAN
                     'quantity' => $cart->quantity,
-                    'name' => substr($cart->product->name, 0, 50),
+                    'name' => substr($productName, 0, 50), // Midtrans max 50 chars
                 ];
             }
 
             $shippingCost = (int) $request->shipping_cost;
             $grandTotal = $itemsTotal + $shippingCost;
 
-            // Tambahkan Ongkir ke Item Details Midtrans
+            // Tambahkan Ongkir ke Item Details
             $item_details[] = [
                 'id' => 'SHIPPING',
                 'price' => $shippingCost,
@@ -153,76 +197,80 @@ class CheckoutController extends Controller
                 'name' => "Ongkir " . strtoupper($request->courier) . " - " . $request->shipping_service,
             ];
 
-            // 4. GENERATE NO TRANSAKSI UNIK
-            // Format: TRX-TAHUNBULANTANGGAL-JAMMENITDETIK-RANDOM (Contoh: TRX-20251212-103000-123)
+            // 4. Generate Order Number
             $orderNumber = 'TRX-' . date('YmdHis') . '-' . mt_rand(100, 999);
 
-            // ==================================================
-            // MULAI PROSES SIMPAN KE DATABASE (INI YANG KURANG KEMARIN)
-            // ==================================================
-
-            // A. Simpan ke Tabel Orders
+            // 5. Simpan ke Database
             $order = \App\Models\Order::create([
                 'user_id' => $user->id,
                 'order_number' => $orderNumber,
-
-                // Snapshot Alamat
                 'recipient_name' => $address->recipient_name ?? $user->name,
                 'phone_number' => $address->phone_number ?? $user->phone,
                 'address_full' => $fullAddress,
                 'city' => $address->city,
                 'province' => $address->province,
                 'postal_code' => $address->postal_code,
-
-                // Info Pengiriman
                 'courier' => $request->courier,
                 'service' => $request->shipping_service,
                 'shipping_cost' => $shippingCost,
-                'total_weight' => $request->weight ?? 1000, // Ambil dari request atau hitung ulang
-
-                // Info Pembayaran
-                'subtotal' => $itemsTotal,
-                'grand_total' => $grandTotal,
-                'status' => 'pending', // Status awal pasti pending
+                'total_weight' => $request->weight ?? 1000,
+                'subtotal' => $itemsTotal,     // Subtotal yang benar
+                'grand_total' => $grandTotal,  // Grand total yang benar
+                'status' => 'pending',
             ]);
 
-            // B. Simpan ke Tabel Order Items
+            // Simpan Item (Dengan Harga Varian juga)
             foreach ($carts as $cart) {
+                // ... (Ulangi logika hitung harga atau ambil dari loop sebelumnya) ...
+                // Agar code rapi, kita hitung ulang sedikit di sini atau simpan di array temporary
+                // Tapi untuk aman, kita hitung ulang cepat:
+
+                $basePrice = $cart->product->price;
+                $finalUnitPrice = $basePrice;
+                $variantsData = $cart->product->variants_data;
+                if (is_string($variantsData)) $variantsData = json_decode($variantsData, true);
+
+                if ($cart->option) {
+                    $optData = collect($variantsData)->first(function ($item) use ($cart) {
+                        return isset($item['type']) && $item['type'] === 'option' && $item['key'] === $cart->option;
+                    });
+                    if ($optData) $finalUnitPrice += ($optData['price'] - $basePrice);
+                }
+                if ($cart->size) {
+                    $sizeData = collect($variantsData)->first(function ($item) use ($cart) {
+                        return isset($item['type']) && $item['type'] === 'size' && $item['key'] === $cart->size;
+                    });
+                    if ($sizeData) $finalUnitPrice += ($sizeData['price'] - $basePrice);
+                }
+
                 \App\Models\OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $cart->product_id,
                     'product_name' => $cart->product->name,
-                    'variant_info' => $cart->size ? "Size: {$cart->size}" : null,
+                    'variant_info' => trim(($cart->size ? "Size: {$cart->size} " : "") . ($cart->option ? "{$cart->option}" : "")),
                     'quantity' => $cart->quantity,
-                    'price' => $cart->final_price ?? $cart->product->price,
-                    'subtotal' => ($cart->final_price ?? $cart->product->price) * $cart->quantity,
+                    'price' => $finalUnitPrice, // Simpan harga final per item
+                    'subtotal' => $finalUnitPrice * $cart->quantity,
                 ]);
             }
 
-            // ==================================================
-            // AKHIR PROSES SIMPAN DATABASE
-            // ==================================================
-
-            // 5. Request Snap Token ke Midtrans
+            // 6. Request Snap Token
             $params = [
                 'transaction_details' => [
-                    'order_id' => $orderNumber, // PENTING: Harus sama dengan yang di DB
-                    'gross_amount' => $grandTotal,
+                    'order_id' => $orderNumber,
+                    'gross_amount' => $grandTotal, // Jumlah yang benar
                 ],
                 'customer_details' => [
                     'first_name' => $user->name,
                     'email' => $user->email,
                     'phone' => $address->phone_number ?? '08123456789',
                 ],
-                'item_details' => $item_details,
+                'item_details' => $item_details, // Detail yang benar
             ];
 
             $snapToken = Snap::getSnapToken($params);
 
-            // 6. Update Snap Token ke Database (Opsional, buat referensi)
             $order->update(['snap_token' => $snapToken]);
-
-            // 7. Hapus Keranjang Belanja (Karena sudah jadi pesanan)
             Cart::where('user_id', $user->id)->delete();
 
             return response()->json([
