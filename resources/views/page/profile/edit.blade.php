@@ -80,11 +80,13 @@
             </div>
 
             <div class="grid grid-cols-3 gap-3 lg:gap-6 mb-8 lg:mb-12">
-                <div
-                    class="p-4 lg:p-6 bg-gray-50 rounded-2xl text-center hover:bg-gray-100 transition-colors cursor-pointer border border-transparent hover:border-gray-200">
-                    <p class="text-2xl lg:text-3xl font-bold mb-1 text-gray-900">12</p>
-                    <p class="text-xs lg:text-sm text-gray-500 font-medium uppercase tracking-wide">Pesanan</p>
-                </div>
+                <a href="{{ route('pesanan') }}" class="block">
+                    <div
+                        class="p-4 lg:p-6 bg-gray-50 rounded-2xl text-center hover:bg-gray-100 transition-colors cursor-pointer border border-transparent hover:border-gray-200">
+                        <p class="text-2xl lg:text-3xl font-bold mb-1 text-gray-900">{{ $orderCount }}</p>
+                        <p class="text-xs lg:text-sm text-gray-500 font-medium uppercase tracking-wide">Pesanan</p>
+                    </div>
+                </a>
                 <div
                     class="p-4 lg:p-6 bg-gray-50 rounded-2xl text-center hover:bg-gray-100 transition-colors cursor-pointer border border-transparent hover:border-gray-200">
                     <p class="text-2xl lg:text-3xl font-bold mb-1 text-gray-900">6</p>
@@ -99,7 +101,7 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-6 mb-8 lg:mb-12">
 
-                <button
+                <a href="{{ route('pesanan') }}"
                     class="flex items-center gap-4 p-4 lg:p-6 bg-white border border-gray-100 shadow-sm rounded-2xl hover:shadow-md hover:border-black/10 transition-all group text-left">
                     <div
                         class="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-black group-hover:text-white transition-colors">
@@ -117,7 +119,7 @@
                         stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                     </svg>
-                </button>
+                </a>
 
                 <a href="{{ route('address.index') }}"
                     class="flex items-center gap-4 p-4 lg:p-6 bg-white border border-gray-100 shadow-sm rounded-2xl hover:shadow-md hover:border-black/10 transition-all group text-left">
