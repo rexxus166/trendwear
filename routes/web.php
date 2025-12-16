@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\CheckoutController;
@@ -37,6 +38,9 @@ Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
 
     // Halaman Shop (Semua Produk)
     Route::get('/product/all', [DashboardController::class, 'shop'])->name('shop');
+
+    Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
+    Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
 
     // Halaman Kategori Spesifik
     Route::get('/category/{slug}', [DashboardController::class, 'category'])->name('category.show');

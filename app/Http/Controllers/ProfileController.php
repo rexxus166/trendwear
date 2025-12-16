@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use App\Models\Order;
+use App\Models\Wishlist;
 
 class ProfileController extends Controller
 {
@@ -20,12 +21,12 @@ class ProfileController extends Controller
         $orderCount = Order::where('user_id', Auth::id())->count();
 
         // (Opsional) Kalau nanti sudah ada fitur Wishlist/Review, hitung juga disini
-        // $wishlistCount = Wishlist::where('user_id', Auth::id())->count();
+        $wishlistCount = Wishlist::where('user_id', Auth::id())->count();
 
         return view('page.profile.edit', [
             'user' => $request->user(),
             'orderCount' => $orderCount,
-            // 'wishlistCount' => $wishlistCount,
+            'wishlistCount' => $wishlistCount,
         ]);
     }
 

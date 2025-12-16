@@ -82,7 +82,8 @@
                     <svg class="w-3 h-3 transition-transform group-hover:translate-x-0.5" fill="none"
                         stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                    </svg></div>
+                    </svg>
+                </div>
             </a>
         </div>
 
@@ -126,9 +127,21 @@
                             </span>
                         @endif
 
-                        <button
-                            class="absolute top-3 right-3 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm transition-all hover:scale-110 hover:text-red-500 z-10">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        @php
+                            $isWishlisted =
+                                Auth::check() &&
+                                \App\Models\Wishlist::where('user_id', Auth::id())
+                                    ->where('product_id', $product->id)
+                                    ->exists();
+                        @endphp
+
+                        <button onclick="toggleWishlist(event, this, {{ $product->id }})"
+                            class="absolute top-3 right-3 w-10 h-10 rounded-full flex items-center justify-center shadow-sm transition-all hover:scale-110 z-10 bg-white group-btn
+                            {{ $isWishlisted ? 'text-red-500' : 'text-gray-400 hover:text-red-500' }}">
+
+                            <svg class="w-5 h-5 transition-colors duration-300"
+                                fill="{{ $isWishlisted ? 'currentColor' : 'none' }}" stroke="currentColor"
+                                viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
                                 </path>
