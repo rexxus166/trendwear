@@ -6,6 +6,7 @@ use App\Models\Cart;
 use Illuminate\Http\Request;
 use App\Models\UserAddress;
 use Midtrans\Config;
+use App\Models\Order;
 use Midtrans\Snap;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -282,5 +283,15 @@ class CheckoutController extends Controller
             Log::error("Midtrans Error: " . $e->getMessage());
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
+    }
+
+    public function success($order_id)
+    {
+        // Cari order milik user yang sedang login (biar aman ga diintip orang lain)
+        $order = Order::where('order_number', $order_id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        return view('page.checkout.success', compact('order'));
     }
 }
