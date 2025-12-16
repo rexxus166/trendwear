@@ -22,6 +22,25 @@ class DashboardController extends Controller
         return view('page.dashboard.index', compact('categories', 'trendingProducts'));
     }
 
+    public function search(Request $request)
+    {
+        // 1. Ambil kata kunci dari input 'q'
+        $keyword = $request->input('q');
+
+        // 2. Cari Produk (Nama ATAU Deskripsi mirip dengan keyword)
+        $products = Product::where('name', 'like', "%{$keyword}%")
+            ->orWhere('description', 'like', "%{$keyword}%")
+            ->with(['images', 'category']) // Load relasi gambar & kategori biar cepat
+            ->latest()
+            ->get(); // Kalau mau pakai halaman, ganti ->paginate(12);
+
+        // 3. Kirim data ke View yang baru kamu buat
+        return view('page.search.hasil', [
+            'products' => $products,
+            'keyword' => $keyword
+        ]);
+    }
+
     public function show($slug)
     {
         // Cari produk berdasarkan slug, sertakan relasi kategori dan gambar

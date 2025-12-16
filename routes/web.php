@@ -35,11 +35,15 @@ Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
 
     // --- Dashboard & Shop Pages ---
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/search', [DashboardController::class, 'search'])->name('search');
+    Route::get('/search-mobile', function () {
+        return view('page.search.index');
+    })->name('search.mobile');
 
     // Halaman Shop (Semua Produk)
     Route::get('/product/all', [DashboardController::class, 'shop'])->name('shop');
 
-    Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
+    Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist');
     Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
 
     // Halaman Kategori Spesifik

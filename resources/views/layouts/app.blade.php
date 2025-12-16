@@ -42,7 +42,14 @@
 <body class="bg-gray-50">
     <div class="min-h-screen bg-white max-w-7xl mx-auto shadow-sm relative">
 
-        @if (request()->routeIs('profile.edit', 'cart.index', 'address.index', 'checkout.index', 'pesanan', 'orders.show'))
+        @if (request()->routeIs(
+                'profile.edit',
+                'cart.index',
+                'address.index',
+                'checkout.index',
+                'pesanan',
+                'orders.show',
+                'wishlist'))
             <div class="hidden lg:block">
                 @include('components.header')
             </div>

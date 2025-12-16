@@ -87,7 +87,7 @@
                         <p class="text-xs lg:text-sm text-gray-500 font-medium uppercase tracking-wide">Pesanan</p>
                     </div>
                 </a>
-                <a href="{{ route('wishlist.index') }}" class="block"> {{-- Bungkus pakai link --}}
+                <a href="{{ route('wishlist') }}" class="block"> {{-- Bungkus pakai link --}}
                     <div
                         class="p-4 lg:p-6 bg-gray-50 rounded-2xl text-center hover:bg-gray-100 transition-colors cursor-pointer border border-transparent hover:border-gray-200">
                         <p class="text-2xl lg:text-3xl font-bold mb-1 text-gray-900">{{ $wishlistCount }}</p>
