@@ -114,10 +114,10 @@
                                 Bayar Sekarang
                             </button>
                         @else
-                            <button
-                                class="w-full sm:w-auto px-6 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-50 transition-colors">
+                            <a href="{{ route('orders.show', $order->order_number) }}"
+                                class="w-full sm:w-auto px-6 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-50 transition-colors inline-block text-center">
                                 Lihat Detail
-                            </button>
+                            </a>
                         @endif
                     </div>
                 </div>

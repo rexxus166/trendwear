@@ -62,6 +62,7 @@ Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/profile/orders', [UserOrderController::class, 'index'])->name('pesanan');
+    Route::get('/profile/orders/{order_number}', [UserOrderController::class, 'show'])->name('orders.show');
 
     // MODULE ADDRESS
     Route::get('/profile/address', [AddressController::class, 'index'])->name('address.index');

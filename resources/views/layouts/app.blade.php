@@ -42,7 +42,7 @@
 <body class="bg-gray-50">
     <div class="min-h-screen bg-white max-w-7xl mx-auto shadow-sm relative">
 
-        @if (request()->routeIs('profile.edit', 'cart.index', 'address.index', 'checkout.index', 'pesanan'))
+        @if (request()->routeIs('profile.edit', 'cart.index', 'address.index', 'checkout.index', 'pesanan', 'orders.show'))
             <div class="hidden lg:block">
                 @include('components.header')
             </div>
@@ -54,7 +54,7 @@
             @yield('content')
         </main>
 
-        @unless (request()->routeIs('cart.index', 'address.index', 'checkout.index', 'pesanan'))
+        @unless (request()->routeIs('cart.index', 'address.index', 'checkout.index'))
             @include('components.mobile-nav')
         @endunless
 
