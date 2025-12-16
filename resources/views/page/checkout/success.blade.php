@@ -43,14 +43,14 @@
             </div>
 
             <div class="space-y-3">
-                {{-- Tombol Lacak Pesanan (Ke Halaman Detail Order) --}}
-                <a href="{{ route('orders.show', $order->id) }}"
+                {{-- Tombol Lihat Pesanan (Ke Halaman Detail Order) --}}
+                <a href="{{ route('pesanan', $order->id) }}"
                     class="w-full px-6 py-4 bg-black text-white rounded-2xl hover:bg-gray-800 transition-transform active:scale-95 flex items-center justify-center gap-2 font-bold shadow-xl shadow-gray-200">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                     </svg>
-                    Lacak Pesanan Saya
+                    Lihat Pesanan Saya
                 </a>
 
                 {{-- Tombol Lanjut Belanja --}}

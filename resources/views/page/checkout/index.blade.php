@@ -507,7 +507,7 @@
                                 console.log('Success:', result);
                                 // Redirect ke halaman sukses dengan membawa Order ID dari response backend
                                 // (Pastikan backend kirim 'order_id' di JSON response ya!)
-                                window.location.href = "/checkout/success/" + data.orderNumber;
+                                window.location.href = "/checkout/success/" + data.order_id;
                             },
 
                             // 2. PEMBAYARAN PENDING (Misal transfer bank belum dibayar)
@@ -515,7 +515,7 @@
                                 console.log('Pending:', result);
                                 // Tetap redirect ke halaman sukses (karena order sudah terbuat, statusnya aja yg pending)
                                 // Atau bisa redirect ke riwayat pesanan
-                                window.location.href = "/checkout/success/" + data.orderNumber;
+                                window.location.href = "/checkout/success/" + data.order_id;
                             },
 
                             // 3. PEMBAYARAN GAGAL
