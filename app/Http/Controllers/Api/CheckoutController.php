@@ -4,19 +4,19 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Cart;
-use App\Models\Order;
-use Midtrans\Snap;
-use Midtrans\Config;
-use App\Models\OrderItem;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Cart;
+use App\Models\Order;
+use App\Models\OrderItem;
+use Midtrans\Config; // Import Midtrans
+use Midtrans\Snap;   // Import Midtrans
 
 class CheckoutController extends Controller
 {
     public function checkout(Request $request)
     {
-        // 1. Validasi Input Alamat (Data ini dikirim dari Flutter)
+        // 1. Validasi Input
         $validator = Validator::make($request->all(), [
             'recipient_name' => 'required|string',
             'phone_number'   => 'required|string',
@@ -24,9 +24,9 @@ class CheckoutController extends Controller
             'city'           => 'required|string',
             'province'       => 'required|string',
             'postal_code'    => 'required|string',
-            'courier'        => 'required|string', // JNE, JNT, dll
-            'service'        => 'required|string', // REG, YES, dll
-            'shipping_cost'  => 'required|integer', // Ongkir
+            'courier'        => 'required|string',
+            'service'        => 'required|string',
+            'shipping_cost'  => 'required|integer',
         ]);
 
         if ($validator->fails()) {
@@ -42,7 +42,6 @@ class CheckoutController extends Controller
             return response()->json(['message' => 'Keranjang kosong, tidak bisa checkout'], 400);
         }
 
-        // 3. Mulai Transaksi Database (Biar aman kalau error di tengah)
         DB::beginTransaction();
 
         try {
@@ -51,26 +50,23 @@ class CheckoutController extends Controller
 
             // --- HITUNG SUBTOTAL ---
             foreach ($carts as $cart) {
-                // Logic Harga: Cek apakah item ini punya varian size?
                 $price = $cart->product->price; // Default harga dasar
 
-                // Cek harga varian spesifik (Logic Backend)
+                // Logic Harga Varian
                 if ($cart->size && !empty($cart->product->variants_data)) {
                     $variants = $cart->product->variants_data;
-                    // Cari varian yg key-nya sama dengan size di cart (misal "L")
                     foreach ($variants as $v) {
                         if (isset($v['key']) && $v['key'] == $cart->size && isset($v['price'])) {
-                            $price = (int) $v['price']; // Update harga jadi harga varian
+                            $price = (int) $v['price'];
                             break;
                         }
                     }
                 }
 
-                // Tambahkan ke subtotal
                 $subtotal += $price * $cart->quantity;
                 $totalWeight += $cart->product->weight * $cart->quantity;
 
-                // Cek Stok sekalian
+                // Cek Stok
                 if ($cart->product->stock < $cart->quantity) {
                     throw new \Exception("Stok produk {$cart->product->name} tidak cukup!");
                 }
@@ -78,36 +74,31 @@ class CheckoutController extends Controller
 
             $grandTotal = $subtotal + $request->shipping_cost;
 
-            // 4. Buat Data Order (Header)
+            // 3. Buat Data Order
             $orderNumber = 'TRX-' . date('YmdHis') . '-' . $user->id;
 
             $order = Order::create([
                 'user_id'        => $user->id,
                 'order_number'   => $orderNumber,
-
-                // Snapshot Alamat
                 'recipient_name' => $request->recipient_name,
                 'phone_number'   => $request->phone_number,
                 'address_full'   => $request->address_full,
                 'city'           => $request->city,
                 'province'       => $request->province,
                 'postal_code'    => $request->postal_code,
-
-                // Info Pengiriman
                 'courier'        => $request->courier,
                 'service'        => $request->service,
                 'shipping_cost'  => $request->shipping_cost,
                 'total_weight'   => $totalWeight,
-
-                // Info Bayar
                 'subtotal'       => $subtotal,
                 'grand_total'    => $grandTotal,
                 'status'         => 'pending',
+                // snap_token nanti diupdate di bawah
             ]);
 
-            // 5. Pindahkan Cart ke Order Item (Detail)
+            // 4. Pindahkan Cart ke Order Item
             foreach ($carts as $cart) {
-                // Hitung ulang harga per item untuk snapshot (sama kayak logic di atas)
+                // Hitung ulang harga per item untuk snapshot
                 $price = $cart->product->price;
                 if ($cart->size && !empty($cart->product->variants_data)) {
                     $variants = $cart->product->variants_data;
@@ -122,26 +113,51 @@ class CheckoutController extends Controller
                 OrderItem::create([
                     'order_id'     => $order->id,
                     'product_id'   => $cart->product_id,
-                    'product_name' => $cart->product->name, // Simpan nama saat beli
-                    'variant_info' => $cart->size,          // Simpan size ke variant_info
+                    'product_name' => $cart->product->name,
+                    'variant_info' => $cart->size,
                     'quantity'     => $cart->quantity,
-                    'price'        => $price,               // Simpan harga saat beli
+                    'price'        => $price,
                     'subtotal'     => $price * $cart->quantity,
                 ]);
 
-                // Kurangi Stok Produk
+                // Kurangi Stok
                 $cart->product->decrement('stock', $cart->quantity);
             }
 
-            // 6. Kosongkan Keranjang
+            // --- INTEGRASI MIDTRANS ---
+            // Set konfigurasi Midtrans
+            Config::$serverKey = config('midtrans.server_key'); // Ambil dari config/services atau .env
+            Config::$isProduction = config('midtrans.is_production');
+            Config::$isSanitized = true;
+            Config::$is3ds = true;
+
+            $midtransParams = [
+                'transaction_details' => [
+                    'order_id' => $orderNumber,
+                    'gross_amount' => (int) $grandTotal,
+                ],
+                'customer_details' => [
+                    'first_name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $request->phone_number,
+                ],
+            ];
+
+            // Minta Snap Token
+            $snapToken = Snap::getSnapToken($midtransParams);
+
+            // Update token ke database
+            $order->update(['snap_token' => $snapToken]);
+
+            // 5. Hapus Keranjang
             Cart::where('user_id', $user->id)->delete();
 
-            // Commit (Simpan Permanen)
             DB::commit();
 
             return response()->json([
-                'message' => 'Checkout berhasil!',
-                'data'    => $order
+                'message'    => 'Checkout berhasil!',
+                'data'       => $order,
+                'snap_token' => $snapToken // <--- Token dikirim ke Flutter
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
