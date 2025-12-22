@@ -28,6 +28,8 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+require __DIR__ . '/auth.php';
+
 Route::post('/ai-chat', [App\Http\Controllers\AiChatController::class, 'chat'])->name('ai.chat');
 
 // ==========================================
@@ -54,8 +56,7 @@ Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
     // Halaman Trending
     Route::get('/trending', [DashboardController::class, 'trending'])->name('trending');
 
-    // Detail Produk
-    Route::get('/{slug}', [DashboardController::class, 'show'])->name('product.detail');
+
 
     // --- Shopping Cart ---
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
@@ -81,6 +82,9 @@ Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
     Route::put('/profile/address/{id}', [AddressController::class, 'update'])->name('address.update');
     Route::delete('/profile/address/{id}', [AddressController::class, 'destroy'])->name('address.destroy');
     Route::post('/profile/address/{id}/set-primary', [AddressController::class, 'setPrimary'])->name('address.setPrimary');
+
+    // Detail Produk (Moved to bottom to avoid conflict with other routes)
+    Route::get('/{slug}', [DashboardController::class, 'show'])->name('product.detail');
 });
 
 
@@ -148,5 +152,3 @@ Route::get('/cari-lokasi-toko/{kecamatan}', function ($kecamatan) {
 
     return $response->json();
 });
-
-require __DIR__ . '/auth.php';
