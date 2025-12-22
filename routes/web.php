@@ -55,7 +55,7 @@ Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
     Route::get('/trending', [DashboardController::class, 'trending'])->name('trending');
 
     // Detail Produk
-    Route::get('/product/{slug}', [DashboardController::class, 'show'])->name('product.detail');
+    Route::get('/{slug}', [DashboardController::class, 'show'])->name('product.detail');
 
     // --- Shopping Cart ---
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');

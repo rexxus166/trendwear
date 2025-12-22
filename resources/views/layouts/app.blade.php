@@ -61,7 +61,7 @@
             @yield('content')
         </main>
 
-        @unless (request()->routeIs('cart.index', 'address.index', 'checkout.index'))
+        @unless (request()->routeIs('cart.index', 'address.index', 'checkout.index', 'product.detail'))
             @include('components.mobile-nav')
         @endunless
 
