@@ -28,6 +28,8 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::post('/ai-chat', [App\Http\Controllers\AiChatController::class, 'chat'])->name('ai.chat');
+
 // ==========================================
 // RUTE UNTUK USER BIASA (MEMBER)
 // ==========================================
