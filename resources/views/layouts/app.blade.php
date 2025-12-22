@@ -136,7 +136,7 @@
     </button>
 
     <!-- AI Chat Box -->
-    <div id="aiChatBox" class="fixed bottom-24 right-6 w-96 bg-white rounded-2xl shadow-2xl z-50 transform translate-y-[120%] transition-transform duration-300 ease-in-out flex flex-col max-h-[500px] border border-gray-100 hidden">
+    <div id="aiChatBox" class="fixed left-4 right-4 bottom-28 md:left-auto md:right-6 md:bottom-24 w-auto md:w-96 bg-white rounded-2xl shadow-2xl z-50 transform translate-y-[120%] transition-transform duration-300 ease-in-out flex flex-col max-h-[60vh] md:max-h-[500px] border border-gray-100 hidden">
         <!-- Header -->
         <div class="bg-black text-white px-5 py-4 rounded-t-2xl flex justify-between items-center">
             <div class="flex items-center gap-2">

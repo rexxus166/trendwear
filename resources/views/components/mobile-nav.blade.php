@@ -20,6 +20,17 @@
             <span class="text-[10px] font-medium">Search</span>
         </a>
 
+        <!-- AI Center Button -->
+        <button onclick="toggleChat()" class="flex flex-col items-center justify-center -mt-6">
+            <div class="bg-black text-white p-3.5 rounded-full shadow-lg border-4 border-white transform hover:scale-105 transition-transform">
+                <!-- Sparkles Icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+            </div>
+            <span class="text-[10px] font-bold mt-1 text-black">TrendAi</span>
+        </button>
+
         <a href="{{ route('wishlist') }}"
             class="flex flex-col items-center gap-1 px-4 py-1 rounded-xl {{ request()->routeIs('wishlist') ? 'text-black' : 'text-gray-400 hover:text-black' }}">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
